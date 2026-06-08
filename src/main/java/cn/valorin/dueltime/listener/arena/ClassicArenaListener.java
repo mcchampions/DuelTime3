@@ -164,7 +164,7 @@ public class ClassicArenaListener implements Listener {
         if (baseArena instanceof ClassicArena) {
             //是选手
             ClassicArena arena = (ClassicArena) baseArena;
-            if (arena.getStage().equals(ClassicArena.Stage.COUNTDOWN)) {
+            if (arena.getStage() == ClassicArena.Stage.COUNTDOWN) {
                 if (!(boolean) arena.getArenaData().getFunctionData(CLASSIC_COUNTDOWN)[1]) {
                     player.teleport(arena.getPlayerStartLocationMap(player.getName()));
                 }
@@ -267,7 +267,7 @@ public class ClassicArenaListener implements Listener {
                 ItemStack itemStack = slot == -1 ? player.getItemOnCursor() : inventory.getItem(slot);
                 if (itemStack == null) continue;
                 if (keywords != null && itemStack.hasItemMeta()) {
-                    if (checkRange.equals("name") || checkRange.equals("all")) {
+                    if ("name".equals(checkRange) || "all".equals(checkRange)) {
                         String displayName = itemStack.getItemMeta().getDisplayName();
                         if (displayName == null) continue;
                         for (String keyword : keywords) {
@@ -279,7 +279,7 @@ public class ClassicArenaListener implements Listener {
                             }
                         }
                     }
-                    if (checkRange.equals("lore") || checkRange.equals("all")) {
+                    if ("lore".equals(checkRange) || "all".equals(checkRange)) {
                         List<String> lores = itemStack.getItemMeta().getLore();
                         if (lores == null) continue;
                         for (String lore : lores) {
@@ -347,7 +347,7 @@ public class ClassicArenaListener implements Listener {
             for (String commandData : commandDataList) {
                 String identity = commandData.split(":")[0];
                 String content = REGEX.matcher(commandData.substring(identity.length() + 1)).replaceAll(Matcher.quoteReplacement(arena.getArenaData().getDiagonalPointLocation1().getWorld().getName()));
-                if (identity.equalsIgnoreCase("single_console")) {
+                if ("single_console".equalsIgnoreCase(identity)) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), content);
                 } else {
                     for (BaseGamerData gamerData : arena.getGamerDataList()) {

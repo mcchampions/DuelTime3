@@ -24,7 +24,7 @@ public class CMDClick extends SubCommand {
         if (args.length != 2) {
             return true;
         }
-        if (args[1].equalsIgnoreCase("item")) {
+        if ("item".equalsIgnoreCase(args[1])) {
             ItemStack item = ItemDetailInventoryHolder.itemMap.getOrDefault(sender.getName(), null);
             if (item == null) {
                 return true;

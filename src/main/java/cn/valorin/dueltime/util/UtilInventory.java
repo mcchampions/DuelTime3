@@ -13,7 +13,7 @@ public class UtilInventory {
             //-1代表光标上的物品，防止玩家把物品藏在光标上逃避检测
             ItemStack itemStack = slot == -1 ? player.getItemOnCursor() : inventory.getItem(slot);
             if (keywords != null) {
-                if (keywordCheckRange.equals("name") || keywordCheckRange.equals("all")) {
+                if ("name".equals(keywordCheckRange) || "all".equals(keywordCheckRange)) {
                     String displayName = itemStack.getItemMeta().getDisplayName();
                     if (displayName == null) continue;
                     for (String keyword : keywords) {
@@ -22,7 +22,7 @@ public class UtilInventory {
                         }
                     }
                 }
-                if (keywordCheckRange.equals("lore") || keywordCheckRange.equals("all")) {
+                if ("lore".equals(keywordCheckRange) || "all".equals(keywordCheckRange)) {
                     List<String> lores = itemStack.getItemMeta().getLore();
                     if (lores == null) continue;
                     for (String lore : lores) {

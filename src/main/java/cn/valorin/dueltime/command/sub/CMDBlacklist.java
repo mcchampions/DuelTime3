@@ -42,13 +42,13 @@ public class CMDBlacklist extends SubCommand {
             return true;
         }
         String singleCommandId = singleCommand.getId();
-        if (singleCommandId.equals("add") || singleCommandId.equals("remove")) {
+        if ("add".equals(singleCommandId) || "remove".equals(singleCommandId)) {
             if (args.length < 3) {
                 helpList.sendCorrect(sender, -1, args[1], label, args);
                 return true;
             }
             String targetPlayerName = args[2];
-            if (singleCommandId.equals("add")) {
+            if ("add".equals(singleCommandId)) {
                 if (!Bukkit.getOfflinePlayer(targetPlayerName).hasPlayedBefore()) {
                     helpList.sendCorrect(sender, 2, args[1], label, args);
                     MsgBuilder.send(Msg.ERROR_PLAYER_NO_FOUND, sender,
@@ -75,7 +75,7 @@ public class CMDBlacklist extends SubCommand {
             }
             return true;
         }
-        if (singleCommandId.equals("view")) {
+        if ("view".equals(singleCommandId)) {
             List<String> blacklist = cache.get();
             if (blacklist.isEmpty()) {
                 MsgBuilder.send(Msg.COMMAND_SUB_BLACKLIST_VIEW_EMPTY, sender);

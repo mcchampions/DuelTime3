@@ -49,7 +49,7 @@ public class CMDLobby extends SubCommand {
             return true;
         }
         String singleCommandId = singleCommand.getId();
-        if (singleCommandId.equals("help")) {
+        if ("help".equals(singleCommandId)) {
             helpList.send(sender, label,args[0]);
             return true;
         }
@@ -59,7 +59,7 @@ public class CMDLobby extends SubCommand {
         }
         Player player = (Player) sender;
         Location lobbyLocation = cache.get(LocationCache.InternalType.LOBBY.getId());
-        if (singleCommandId.equals("set")) {
+        if ("set".equals(singleCommandId)) {
             if (lobbyLocation != null) {
                 cache.set(LocationCache.InternalType.LOBBY.getId(), player.getLocation());
                 MsgBuilder.send(Msg.COMMAND_SUB_LOBBY_UPDATE_SUCCESSFULLY, sender);
@@ -69,7 +69,7 @@ public class CMDLobby extends SubCommand {
             }
             return true;
         }
-        if (singleCommandId.equals("delete")) {
+        if ("delete".equals(singleCommandId)) {
             if (lobbyLocation == null) {
                 MsgBuilder.send(Msg.COMMAND_SUB_LOBBY_DELETE_FAIL_NONE, sender);
                 return true;

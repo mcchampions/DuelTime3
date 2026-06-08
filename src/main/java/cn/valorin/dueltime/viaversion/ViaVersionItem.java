@@ -147,7 +147,7 @@ public class ViaVersionItem {
     public static boolean isWallSignMaterial(Material material) {
         String name = material.name();
         if (Material.getMaterial("WALL_SIGN") != null) {
-            return name.equals("WALL_SIGN");
+            return "WALL_SIGN".equals(name);
         } else {
             switch (name) {
                 case "ACACIA_WALL_SIGN":
@@ -171,7 +171,7 @@ public class ViaVersionItem {
     public static boolean isSignPostMaterial(Material material) {
         String name = material.name();
         if (Material.getMaterial("SIGN_POST") != null) {
-            return name.equals("SIGN_POST");
+            return "SIGN_POST".equals(name);
         } else {
             switch (name) {
                 case "ACACIA_SIGN":
@@ -193,9 +193,9 @@ public class ViaVersionItem {
     public static boolean isPlayerSkull(Material material) {
         String name = material.name();
         if (Material.getMaterial("SKULL") != null) {
-            return name.equals("SKULL");
+            return "SKULL".equals(name);
         } else {
-            return name.equals("PLAYER_HEAD") || name.equals("PLAYER_WALL_HEAD");
+            return "PLAYER_HEAD".equals(name) || "PLAYER_WALL_HEAD".equals(name);
         }
     }
 
@@ -273,7 +273,7 @@ public class ViaVersionItem {
         try {
             clazz = Class.forName("org.bukkit.inventory.meta.ItemMeta");
             for (Method method : clazz.getMethods()) {
-                if (method.getName().equals("addItemFlags")) {
+                if ("addItemFlags".equals(method.getName())) {
                     return true;
                 }
             }
@@ -291,7 +291,7 @@ public class ViaVersionItem {
         try {
             clazz = Class.forName("org.bukkit.inventory.PlayerInventory");
             for (Method method : clazz.getMethods()) {
-                if (method.getName().equals("getItemInOffHand")) {
+                if ("getItemInOffHand".equals(method.getName())) {
                     return true;
                 }
             }

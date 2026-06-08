@@ -39,7 +39,7 @@ public class MyBatisManager {
     private DatabaseType getTypeFromConfig(FileConfiguration config, String key) {
         String path = "Database.type." + key;
         if (config.contains(path)) {
-            return config.getString(path).equalsIgnoreCase("mysql") ? DatabaseType.MYSQL : DatabaseType.SQLITE;
+            return "mysql".equalsIgnoreCase(config.getString(path)) ? DatabaseType.MYSQL : DatabaseType.SQLITE;
         }
         return DatabaseType.SQLITE;
     }

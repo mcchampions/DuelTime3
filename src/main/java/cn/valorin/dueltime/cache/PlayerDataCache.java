@@ -130,7 +130,7 @@ public class PlayerDataCache {
         }
         MyBatisManager myBatisManager = DuelTimePlugin.getInstance().getMyBatisManager();
         try (SqlSession sqlSession = myBatisManager.getFactory(this.getClass()).openSession(true)) {
-            if (myBatisManager.getType(this.getClass()).equals(MyBatisManager.DatabaseType.MYSQL)) {
+            if (myBatisManager.getType(this.getClass()) == MyBatisManager.DatabaseType.MYSQL) {
                 sqlSession.getMapper(PlayerDataMapper.class).insertOrUpdateMySQL(playerData);
             } else {
                 sqlSession.getMapper(PlayerDataMapper.class).insertOrUpdateSQLite(playerData);

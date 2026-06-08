@@ -28,9 +28,9 @@ public class ProgressUploadListener implements Listener {
             return;
         }
         String enter = event.getMessage();
-        if (!enter.equalsIgnoreCase("name") &&
-                !enter.equalsIgnoreCase("lore") &&
-                !enter.equalsIgnoreCase("all")) {
+        if (!"name".equalsIgnoreCase(enter) &&
+            !"lore".equalsIgnoreCase(enter) &&
+            !"all".equalsIgnoreCase(enter)) {
             MsgBuilder.send(Msg.PROGRESS_TYPE_SET_FUNCTION_INVENTORY_CHECK_KEYWORD_STEP_1_INCORRECT_RANGE,player,
                     enter);
         }

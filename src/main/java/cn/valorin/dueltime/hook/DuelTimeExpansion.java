@@ -45,68 +45,52 @@ public class DuelTimeExpansion extends PlaceholderExpansion {
         CacheManager cacheManager = DuelTimePlugin.getInstance().getCacheManager();
         PlayerData playerData = cacheManager.getPlayerDataCache().get(player.getName());
         if (playerData != null) {
-            if (identifier.equals("classic_win_number")) {
-                return "" + playerData.getArenaClassicWins();
-            }
-            if (identifier.equals("classic_loss_number")) {
-                return "" + playerData.getArenaClassicLoses();
-            }
-            if (identifier.equals("classic_draw_number")) {
-                return "" + playerData.getArenaClassicDraws();
-            }
-            if (identifier.equals("classic_win_rate")) {
-                return UtilFormat.round((playerData.getArenaClassicWins() / (double) (playerData.getArenaClassicLoses() != 0 ? playerData.getArenaClassicLoses() : 1)) * 100, 1) + "%";
-            }
-            if (identifier.equals("classic_game_number")) {
-                return "" + (playerData.getArenaClassicWins() + playerData.getArenaClassicLoses() + playerData.getArenaClassicDraws());
-            }
-            if (identifier.equals("classic_game_time")) {
-                return "" + playerData.getArenaClassicTime();
-            }
-            if (identifier.equals("total_game_number")) {
-                return "" + playerData.getTotalGameNumber();
-            }
-            if (identifier.equals("total_game_time")) {
-                return "" + playerData.getTotalGameTime();
-            }
-            if (identifier.equals("exp")) {
-                return "" + playerData.getExp();
-            }
-            if (identifier.equals("exp_to_next_level")) {
-                return "" + DuelTimePlugin.getInstance().getLevelManager().calculateRemainingExpForLevelUp(playerData.getExp());
-            }
-            if (identifier.equals("level")) {
-                return "" + DuelTimePlugin.getInstance().getLevelManager().getLevel(player.getName());
-            }
-            if (identifier.equals("tier")) {
-                return DuelTimePlugin.getInstance().getLevelManager().getTier(player.getName()).getTitle();
-            }
-            if (identifier.equals("point")) {
-                return "" + playerData.getPoint();
+            switch (identifier) {
+                case "classic_win_number":
+                    return "" + playerData.getArenaClassicWins();
+                case "classic_loss_number":
+                    return "" + playerData.getArenaClassicLoses();
+                case "classic_draw_number":
+                    return "" + playerData.getArenaClassicDraws();
+                case "classic_win_rate":
+                    return UtilFormat.round((playerData.getArenaClassicWins() / (double) (playerData.getArenaClassicLoses() != 0 ? playerData.getArenaClassicLoses() : 1)) * 100, 1) + "%";
+                case "classic_game_number":
+                    return "" + (playerData.getArenaClassicWins() + playerData.getArenaClassicLoses() + playerData.getArenaClassicDraws());
+                case "classic_game_time":
+                    return "" + playerData.getArenaClassicTime();
+                case "total_game_number":
+                    return "" + playerData.getTotalGameNumber();
+                case "total_game_time":
+                    return "" + playerData.getTotalGameTime();
+                case "exp":
+                    return "" + playerData.getExp();
+                case "exp_to_next_level":
+                    return "" + DuelTimePlugin.getInstance().getLevelManager().calculateRemainingExpForLevelUp(playerData.getExp());
+                case "level":
+                    return "" + DuelTimePlugin.getInstance().getLevelManager().getLevel(player.getName());
+                case "tier":
+                    return DuelTimePlugin.getInstance().getLevelManager().getTier(player.getName()).getTitle();
+                case "point":
+                    return "" + playerData.getPoint();
             }
         }
         RankingManager rankingManager = DuelTimePlugin.getInstance().getRankingManager();
         try {
-            if (identifier.equals("rank_classic_win_number")) {
-                return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_WIN_NUMBER.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_classic_win_rate")) {
-                return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_WIN_RATE.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_classic_game_time")) {
-                return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_GAME_TIME.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_classic_game_number")) {
-                return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_GAME_NUMBER.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_total_game_number")) {
-                return rankingManager.getRanking(RankingManager.InternalType.TOTAL_GAME_NUMBER.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_total_game_time")) {
-                return rankingManager.getRanking(RankingManager.InternalType.TOTAL_GAME_TIME.getId()).getRankString(player);
-            }
-            if (identifier.equals("rank_exp")) {
-                return rankingManager.getRanking(RankingManager.InternalType.EXP.getId()).getRankString(player);
+            switch (identifier) {
+                case "rank_classic_win_number":
+                    return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_WIN_NUMBER.getId()).getRankString(player);
+                case "rank_classic_win_rate":
+                    return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_WIN_RATE.getId()).getRankString(player);
+                case "rank_classic_game_time":
+                    return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_GAME_TIME.getId()).getRankString(player);
+                case "rank_classic_game_number":
+                    return rankingManager.getRanking(RankingManager.InternalType.CLASSIC_GAME_NUMBER.getId()).getRankString(player);
+                case "rank_total_game_number":
+                    return rankingManager.getRanking(RankingManager.InternalType.TOTAL_GAME_NUMBER.getId()).getRankString(player);
+                case "rank_total_game_time":
+                    return rankingManager.getRanking(RankingManager.InternalType.TOTAL_GAME_TIME.getId()).getRankString(player);
+                case "rank_exp":
+                    return rankingManager.getRanking(RankingManager.InternalType.EXP.getId()).getRankString(player);
             }
         } catch (Exception e) {
             e.printStackTrace();

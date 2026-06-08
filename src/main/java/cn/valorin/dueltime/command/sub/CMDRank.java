@@ -46,119 +46,120 @@ public class CMDRank extends SubCommand {
             return true;
         }
         String singleCommandId = singleCommand.getId();
-        if (singleCommandId.equals("me")) {
-            if (!(sender instanceof Player)) {
-                MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+        switch (singleCommandId) {
+            case "me":
+                if (!(sender instanceof Player)) {
+                    MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+                    return true;
+                }
+                MsgBuilder.sends(Msg.COMMAND_SUB_RANK_ME_HEADING, sender);
+                for (Ranking ranking : rankingManager.getRankings().values()) {
+                    if (ranking.getRank(sender.getName()) != -1) {
+                        MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_ME_BODY, sender, false,
+                                ranking.getName(sender),
+                                "" + ranking.getRank(sender.getName()),
+                                "" + ranking.getContent().size(),
+                                ranking.getId());
+                    } else {
+                        MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_ME_BODY_NO_DATA, sender, false,
+                                ranking.getName(sender),
+                                ranking.getId());
+                    }
+                }
+                MsgBuilder.sends(Msg.COMMAND_SUB_RANK_ME_ENDING, sender, false);
                 return true;
-            }
-            MsgBuilder.sends(Msg.COMMAND_SUB_RANK_ME_HEADING, sender);
-            for (Ranking ranking : rankingManager.getRankings().values()) {
-                if (ranking.getRank(sender.getName()) != -1) {
-                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_ME_BODY, sender, false,
-                            ranking.getName(sender),
-                            "" + ranking.getRank(sender.getName()),
+            case "view": {
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String rankingId = args[2];
+                Ranking ranking = rankingManager.getRanking(rankingId);
+                if (ranking == null) {
+                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_INVALID_RANKING_TYPE_ID, sender, false,
+                            rankingId);
+                    UtilHelpList.sendSuggest(sender, 2, rankingManager.getRankings().keySet(), label, args);
+                    return true;
+                }
+                if (ranking.getContent().isEmpty()) {
+                    MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_EMPTY, sender,
+                            ranking.getName(sender));
+                    return true;
+                }
+                int pageViewed = 1;
+                if (args.length > 3) {
+                    if (!UtilFormat.isInt(args[3])) {
+                        MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender, args[3]);
+                    }
+                    pageViewed = Integer.parseInt(args[3]);
+                }
+                double dataSize = ranking.getContent().size();
+                int singlePageSize = ranking.getSinglePageSize();
+                int totalPages = (int) Math.ceil(dataSize / singlePageSize);
+                if (pageViewed < 1 || pageViewed > totalPages) {
+                    MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_INVALID_RANKING_PAGE, sender,
+                            "" + totalPages);
+                    return true;
+                }
+                MsgBuilder.sendsClickable(Msg.COMMAND_SUB_RANK_VIEW_HEADING, sender, false,
+                        ranking.getName(sender), ranking.getDescription(sender));
+                for (int i = singlePageSize * (pageViewed - 1); i < singlePageSize * pageViewed && i < dataSize; i++) {
+                    RankingData data = ranking.getContent().get(i);
+                    MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_BODY, sender, false,
+                            "" + (i + 1),
+                            data.getPlayerName(),
+                            UtilFormat.toString(data.getData()),
+                            UtilFormat.toString(data.getExtraStr(), sender)
+                    );
+                }
+                MsgBuilder.sendsClickable(Msg.COMMAND_SUB_RANK_VIEW_ENDING, sender, false,
+                        "" + (pageViewed - 1), "" + pageViewed, "" + totalPages, "" + (pageViewed + 1), rankingId);
+                int playerRank = ranking.getRank(sender.getName());
+                if (playerRank != -1) {
+                    RankingData data = ranking.getContent().get(playerRank - 1);
+                    MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_ENDING_SHOW_ME, sender, false,
+                            "" + playerRank,
                             "" + ranking.getContent().size(),
-                            ranking.getId());
+                            UtilFormat.toString(data.getData()),
+                            UtilFormat.toString(data.getExtraStr(), sender));
                 } else {
-                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_ME_BODY_NO_DATA, sender, false,
-                            ranking.getName(sender),
-                            ranking.getId());
+                    MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_ENDING_SHOW_ME_NO_DATA, sender);
                 }
-            }
-            MsgBuilder.sends(Msg.COMMAND_SUB_RANK_ME_ENDING, sender, false);
-            return true;
-        }
-        if (singleCommandId.equals("view")) {
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
                 return true;
             }
-            String rankingId = args[2];
-            Ranking ranking = rankingManager.getRanking(rankingId);
-            if (ranking == null) {
-                MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_INVALID_RANKING_TYPE_ID, sender, false,
-                        rankingId);
-                UtilHelpList.sendSuggest(sender, 2, rankingManager.getRankings().keySet(), label, args);
-                return true;
-            }
-            if (ranking.getContent().isEmpty()) {
-                MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_EMPTY, sender,
-                        ranking.getName(sender));
-                return true;
-            }
-            int pageViewed = 1;
-            if (args.length > 3) {
-                if (!UtilFormat.isInt(args[3])) {
-                    MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender, args[3]);
+            case "type":
+                MsgBuilder.send(Msg.COMMAND_SUB_RANK_TYPE_HEADING, sender, false);
+                int i = 1;
+                for (Ranking ranking : rankingManager.getRankings().values()) {
+                    MsgBuilder.sends(Msg.COMMAND_SUB_RANK_TYPE_BODY, sender, false,
+                            "" + i, ranking.getName(sender), ranking.getId(), ranking.getDescription(sender));
+                    i++;
                 }
-                pageViewed = Integer.parseInt(args[3]);
-            }
-            double dataSize = ranking.getContent().size();
-            int singlePageSize = ranking.getSinglePageSize();
-            int totalPages = (int) Math.ceil(dataSize / singlePageSize);
-            if (pageViewed < 1 || pageViewed > totalPages) {
-                MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_INVALID_RANKING_PAGE, sender,
-                        "" + totalPages);
+                MsgBuilder.send(Msg.COMMAND_SUB_RANK_TYPE_ENDING, sender, false,
+                        "" + rankingManager.getRankings().size());
                 return true;
+            case "refresh": {
+                if (!singleCommand.judgePermission(sender)) {
+                    MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
+                    return true;
+                }
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String rankingId = args[2];
+                if (rankingManager.getRanking(rankingId) == null) {
+                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_INVALID_RANKING_TYPE_ID, sender, false,
+                            rankingId);
+                    UtilHelpList.sendSuggest(sender, 2, rankingManager.getRankings().keySet(), label, args);
+                    return true;
+                }
+                //发布请求刷新排行榜事件
+                Bukkit.getServer().getPluginManager().callEvent(new TryToRefreshRankingEvent(sender, DuelTimePlugin.getInstance().getRankingManager().getRanking(rankingId)));
+                break;
             }
-            MsgBuilder.sendsClickable(Msg.COMMAND_SUB_RANK_VIEW_HEADING, sender, false,
-                    ranking.getName(sender), ranking.getDescription(sender));
-            for (int i = singlePageSize * (pageViewed - 1); i < singlePageSize * pageViewed && i < dataSize; i++) {
-                RankingData data = ranking.getContent().get(i);
-                MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_BODY, sender, false,
-                        "" + (i + 1),
-                        data.getPlayerName(),
-                        UtilFormat.toString(data.getData()),
-                        UtilFormat.toString(data.getExtraStr(), sender)
-                );
-            }
-            MsgBuilder.sendsClickable(Msg.COMMAND_SUB_RANK_VIEW_ENDING, sender, false,
-                    "" + (pageViewed - 1), "" + pageViewed, "" + totalPages, "" + (pageViewed + 1), rankingId);
-            int playerRank = ranking.getRank(sender.getName());
-            if (playerRank != -1) {
-                RankingData data = ranking.getContent().get(playerRank - 1);
-                MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_ENDING_SHOW_ME, sender, false,
-                        "" + playerRank,
-                        "" + ranking.getContent().size(),
-                        UtilFormat.toString(data.getData()),
-                        UtilFormat.toString(data.getExtraStr(), sender));
-            } else {
-                MsgBuilder.send(Msg.COMMAND_SUB_RANK_VIEW_ENDING_SHOW_ME_NO_DATA, sender);
-            }
-            return true;
         }
-        if (singleCommandId.equals("type")) {
-            MsgBuilder.send(Msg.COMMAND_SUB_RANK_TYPE_HEADING, sender, false);
-            int i = 1;
-            for (Ranking ranking : rankingManager.getRankings().values()) {
-                MsgBuilder.sends(Msg.COMMAND_SUB_RANK_TYPE_BODY, sender, false,
-                        "" + i, ranking.getName(sender), ranking.getId(), ranking.getDescription(sender));
-                i++;
-            }
-            MsgBuilder.send(Msg.COMMAND_SUB_RANK_TYPE_ENDING, sender, false,
-                    "" + rankingManager.getRankings().size());
-            return true;
-        }
-        if (singleCommandId.equals("refresh")) {
-            if (!singleCommand.judgePermission(sender)) {
-                MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
-                return true;
-            }
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            String rankingId = args[2];
-            if (rankingManager.getRanking(rankingId) == null) {
-                MsgBuilder.sendClickable(Msg.COMMAND_SUB_RANK_INVALID_RANKING_TYPE_ID, sender, false,
-                        rankingId);
-                UtilHelpList.sendSuggest(sender, 2, rankingManager.getRankings().keySet(), label, args);
-                return true;
-            }
-            //发布请求刷新排行榜事件
-            Bukkit.getServer().getPluginManager().callEvent(new TryToRefreshRankingEvent(sender, DuelTimePlugin.getInstance().getRankingManager().getRanking(rankingId)));
-        }
-        if (singleCommandId.equals("hologram")) {
+        if ("hologram".equals(singleCommandId)) {
             if (!singleCommand.judgePermission(sender)) {
                 MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
                 return true;
@@ -172,9 +173,9 @@ public class CMDRank extends SubCommand {
                 helpList.sendCorrect(sender, 2, helpList.getSubCommandById("hologram"), label, args);
                 return true;
             }
-            boolean isAdd = args[2].equalsIgnoreCase("add") || args[2].equalsIgnoreCase("a");
-            boolean isDelete = args[2].equalsIgnoreCase("delete") || args[2].equalsIgnoreCase("d");
-            boolean isMove = args[2].equalsIgnoreCase("move") || args[2].equalsIgnoreCase("m");
+            boolean isAdd = "add".equalsIgnoreCase(args[2]) || "a".equalsIgnoreCase(args[2]);
+            boolean isDelete = "delete".equalsIgnoreCase(args[2]) || "d".equalsIgnoreCase(args[2]);
+            boolean isMove = "move".equalsIgnoreCase(args[2]) || "m".equalsIgnoreCase(args[2]);
             if (!isAdd && !isDelete && !isMove) {
                 helpList.sendCorrect(sender, 2, helpList.getSubCommandById("hologram"), label, args);
                 return true;

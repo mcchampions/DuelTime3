@@ -24,7 +24,7 @@ public class CMDReload extends SubCommand {
         long start = System.currentTimeMillis();
         DuelTimePlugin ins = DuelTimePlugin.getInstance();
         for (BaseArena arena : ins.getArenaManager().getList()) {
-            if (arena.getState().equals(BaseArena.State.IN_PROGRESS_OPENED) || arena.getState().equals(BaseArena.State.IN_PROGRESS_CLOSED)) {
+            if (arena.getState() == BaseArena.State.IN_PROGRESS_OPENED || arena.getState() == BaseArena.State.IN_PROGRESS_CLOSED) {
                 ins.getArenaManager().stop(arena.getId(), null);
             }
         }

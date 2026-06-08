@@ -35,7 +35,7 @@ public class ArenaRecordListener implements Listener {
         }
         BaseRecordData recordData = cache.get(playerName).get(totalIndex);
         CfgManager cfgManager = DuelTimePlugin.getInstance().getCfgManager();
-        if (event.getClick().equals(ClickType.LEFT) && cfgManager.isRecordShowEnabled()) {
+        if (event.getClick() == ClickType.LEFT && cfgManager.isRecordShowEnabled()) {
             if (!recordInventory.isShowAvailable(playerName)) {
                 MsgBuilder.send(Msg.GUI_TYPE_RECORD_SHOW_FREQUENTLY, player, "" + recordInventory.getCooldownLeft(playerName));
                 return;
@@ -47,9 +47,9 @@ public class ArenaRecordListener implements Listener {
                 Bukkit.spigot().broadcast(textComponent);
             }
         }
-        if (event.getClick().equals(ClickType.RIGHT) && cfgManager.isRecordPrintEnabled()) {
+        if (event.getClick() == ClickType.RIGHT && cfgManager.isRecordPrintEnabled()) {
             ItemStack itemInHand = ViaVersionItem.getItemInMainHand(player);
-            if (itemInHand == null || !itemInHand.getType().equals(Material.PAPER)) {
+            if (itemInHand == null || itemInHand.getType() != Material.PAPER) {
                 MsgBuilder.send(Msg.GUI_TYPE_RECORD_PRINT_FAIL_NO_PAPER_IN_HAND, player);
                 return;
             }
