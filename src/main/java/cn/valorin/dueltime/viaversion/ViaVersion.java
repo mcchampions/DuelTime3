@@ -82,13 +82,13 @@ public class ViaVersion {
                 Object enumTIMES = null;
                 for (Enum<?> enum1 : enumConstants) {
                     String name = enum1.name();
-                    if (name.equals("TITLE")) {
+                    if ("TITLE".equals(name)) {
                         enumTITLE = enum1;
                     }
-                    if (name.equals("SUBTITLE")) {
+                    if ("SUBTITLE".equals(name)) {
                         enumSUBTITLE = enum1;
                     }
-                    if (name.equals("TIMES")) {
+                    if ("TIMES".equals(name)) {
                         enumTIMES = enum1;
                     }
                 }

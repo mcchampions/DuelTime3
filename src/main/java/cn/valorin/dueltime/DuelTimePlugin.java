@@ -89,7 +89,7 @@ public final class DuelTimePlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         for (BaseArena arena : arenaManager.getList()) {
-            if (arena.getState().equals(BaseArena.State.IN_PROGRESS_OPENED) || arena.getState().equals(BaseArena.State.IN_PROGRESS_CLOSED)) {
+            if (arena.getState() == BaseArena.State.IN_PROGRESS_OPENED || arena.getState() == BaseArena.State.IN_PROGRESS_CLOSED) {
                 arenaManager.stop(arena.getId(), null);
             }
         }

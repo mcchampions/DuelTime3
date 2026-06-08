@@ -39,87 +39,90 @@ public class CMDPoint extends SubCommand {
             return true;
         }
         String singleCommandId = singleCommand.getId();
-        if (singleCommandId.equals("me")) {
-            if (!(sender instanceof Player)) {
-                MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
-                return true;
-            }
-            double point = cache.get(sender.getName()).getPoint();
-            MsgBuilder.send(Msg.COMMAND_SUB_POINT_VIEW_SELF, sender,
-                    "" + point);
-            return true;
-        }
-        if (singleCommandId.equals("add") || singleCommandId.equals("set")) {
-            if (!singleCommand.judgePermission(sender)) {
-                MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
-                return true;
-            }
-            if (args.length < 4) {
-                helpList.sendCorrect(sender, -1, commandEntered, label, args);
-                return true;
-            }
-            String targetPlayerName = args[2];
-            PlayerData playerData = cache.getAnyway(targetPlayerName);
-            if (playerData == null) {
-                helpList.sendCorrect(sender, 2, commandEntered, label, args);
-                MsgBuilder.send(Msg.ERROR_PLAYER_NO_FOUND, sender,
-                        targetPlayerName);
-                return true;
-            }
-            String pointEnteredString = args[3];
-            if (!UtilFormat.isDouble(pointEnteredString)) {
-                helpList.sendCorrect(sender, 3, commandEntered, label, args);
-                MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender, pointEnteredString);
-                return true;
-            }
-            double pointEntered = Double.parseDouble(pointEnteredString);
-            if (singleCommand.getId().equals("add")) {
-                //操作为添加
-                if (pointEntered <= 0) {
-                    helpList.sendCorrect(sender, 3, commandEntered, label, args);
-                    MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender, pointEnteredString);
+        switch (singleCommandId) {
+            case "me": {
+                if (!(sender instanceof Player)) {
+                    MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
                     return true;
                 }
-                double pointTotal = playerData.getPoint() + pointEntered;
-                playerData.setPoint(pointTotal);
-                MsgBuilder.send(Msg.COMMAND_SUB_POINT_ADD_SUCCESSFULLY, sender,
-                        targetPlayerName, "" + pointTotal);
-            } else {
-                //操作为设置
-                if (pointEntered < 0) {
-                    helpList.sendCorrect(sender, 3, commandEntered, label, args);
-                    MsgBuilder.send(Msg.ERROR_VALUE_IS_NEGATIVE, sender, pointEnteredString);
+                double point = cache.get(sender.getName()).getPoint();
+                MsgBuilder.send(Msg.COMMAND_SUB_POINT_VIEW_SELF, sender,
+                        "" + point);
+                return true;
+            }
+            case "add":
+            case "set": {
+                if (!singleCommand.judgePermission(sender)) {
+                    MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
                     return true;
                 }
-                playerData.setPoint(pointEntered);
-                MsgBuilder.send(Msg.COMMAND_SUB_POINT_SET_SUCCESSFULLY, sender,
-                        targetPlayerName, "" + pointEntered);
-            }
-            //完成缓存变更
-            cache.set(targetPlayerName, playerData);
-            return true;
-        }
-        if (singleCommandId.equals("view")) {
-            if (!singleCommand.judgePermission(sender)) {
-                MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
+                if (args.length < 4) {
+                    helpList.sendCorrect(sender, -1, commandEntered, label, args);
+                    return true;
+                }
+                String targetPlayerName = args[2];
+                PlayerData playerData = cache.getAnyway(targetPlayerName);
+                if (playerData == null) {
+                    helpList.sendCorrect(sender, 2, commandEntered, label, args);
+                    MsgBuilder.send(Msg.ERROR_PLAYER_NO_FOUND, sender,
+                            targetPlayerName);
+                    return true;
+                }
+                String pointEnteredString = args[3];
+                if (!UtilFormat.isDouble(pointEnteredString)) {
+                    helpList.sendCorrect(sender, 3, commandEntered, label, args);
+                    MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender, pointEnteredString);
+                    return true;
+                }
+                double pointEntered = Double.parseDouble(pointEnteredString);
+                if ("add".equals(singleCommand.getId())) {
+                    //操作为添加
+                    if (pointEntered <= 0) {
+                        helpList.sendCorrect(sender, 3, commandEntered, label, args);
+                        MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender, pointEnteredString);
+                        return true;
+                    }
+                    double pointTotal = playerData.getPoint() + pointEntered;
+                    playerData.setPoint(pointTotal);
+                    MsgBuilder.send(Msg.COMMAND_SUB_POINT_ADD_SUCCESSFULLY, sender,
+                            targetPlayerName, "" + pointTotal);
+                } else {
+                    //操作为设置
+                    if (pointEntered < 0) {
+                        helpList.sendCorrect(sender, 3, commandEntered, label, args);
+                        MsgBuilder.send(Msg.ERROR_VALUE_IS_NEGATIVE, sender, pointEnteredString);
+                        return true;
+                    }
+                    playerData.setPoint(pointEntered);
+                    MsgBuilder.send(Msg.COMMAND_SUB_POINT_SET_SUCCESSFULLY, sender,
+                            targetPlayerName, "" + pointEntered);
+                }
+                //完成缓存变更
+                cache.set(targetPlayerName, playerData);
                 return true;
             }
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, commandEntered, label, args);
+            case "view": {
+                if (!singleCommand.judgePermission(sender)) {
+                    MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
+                    return true;
+                }
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, commandEntered, label, args);
+                    return true;
+                }
+                String targetPlayerName = args[2];
+                PlayerData playerData = cache.getAnyway(targetPlayerName);
+                if (playerData == null) {
+                    helpList.sendCorrect(sender, 2, commandEntered, label, args);
+                    MsgBuilder.send(Msg.ERROR_PLAYER_NO_FOUND, sender,
+                            targetPlayerName);
+                    return true;
+                }
+                double point = playerData.getPoint();
+                MsgBuilder.send(Msg.COMMAND_SUB_POINT_VIEW_PLAYER, sender,
+                        targetPlayerName, "" + point);
                 return true;
             }
-            String targetPlayerName = args[2];
-            PlayerData playerData = cache.getAnyway(targetPlayerName);
-            if (playerData == null) {
-                helpList.sendCorrect(sender, 2, commandEntered, label, args);
-                MsgBuilder.send(Msg.ERROR_PLAYER_NO_FOUND, sender,
-                        targetPlayerName);
-                return true;
-            }
-            double point = playerData.getPoint();
-            MsgBuilder.send(Msg.COMMAND_SUB_POINT_VIEW_PLAYER, sender,
-                    targetPlayerName, "" + point);
-            return true;
         }
         return true;
     }

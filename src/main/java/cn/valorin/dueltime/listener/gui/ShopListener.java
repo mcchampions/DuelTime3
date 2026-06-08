@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 public class ShopListener implements Listener {
     private static final Pattern PATTERN = Pattern.compile("{point}", Pattern.LITERAL);
+    private static final Pattern REGEX = Pattern.compile("{player}", Pattern.LITERAL);
 
     @EventHandler
     public void onRedeemInShop(InventoryClickEvent event) {
@@ -77,12 +78,11 @@ public class ShopListener implements Listener {
         if (commands != null) {
             for (String commandData : commands) {
                 String commandExecutor = commandData.split(":")[0];
-                String commandContent = PATTERN.matcher(commandData.substring(commandExecutor.length() + 1)
-                        .replace("{player}", playerName)).replaceAll(Matcher.quoteReplacement("" + pointNeeded));
-                if (commandExecutor.equals("player")) {
+                String commandContent = PATTERN.matcher(REGEX.matcher(commandData.substring(commandExecutor.length() + 1)).replaceAll(Matcher.quoteReplacement(playerName))).replaceAll(Matcher.quoteReplacement("" + pointNeeded));
+                if ("player".equals(commandExecutor)) {
                     Bukkit.dispatchCommand(player, commandContent);
                 }
-                if (commandExecutor.equals("op")) {
+                if ("op".equals(commandExecutor)) {
                     if (player.isOp()) {
                         Bukkit.dispatchCommand(player, commandContent);
                     } else {
@@ -91,7 +91,7 @@ public class ShopListener implements Listener {
                         player.setOp(false);
                     }
                 }
-                if (commandExecutor.equals("console")) {
+                if ("console".equals(commandExecutor)) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandContent);
                 }
             }

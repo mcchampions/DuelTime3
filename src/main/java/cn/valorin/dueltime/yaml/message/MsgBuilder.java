@@ -252,7 +252,7 @@ public class MsgBuilder {
         int nowClickablePlaceHolderIndex = 0;
         for (String messageClip : messageClips) {
             TextComponent textComponent;
-            if (messageClip.equals("[clickable]")) {
+            if ("[clickable]".equals(messageClip)) {
                 /*
                 检测为可点击文字的占位符，开始解析原本匹配到的设置内容
                 设置内容格式：占位符名（插件内定，必须）+分隔符+直接展示的文本内容（必须）+分隔符+触发鼠标悬浮事件后展示的文本内容（非必须）

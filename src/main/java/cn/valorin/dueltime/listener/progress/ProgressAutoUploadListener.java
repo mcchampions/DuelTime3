@@ -87,8 +87,8 @@ public class ProgressAutoUploadListener implements Listener {
                     return;
                 }
                 String identityEntered = clips[0];
-                if (!identityEntered.equalsIgnoreCase("player") && !identityEntered.equalsIgnoreCase("op") &&
-                        !identityEntered.equalsIgnoreCase("console") && !identityEntered.equalsIgnoreCase("console_single_time")) {
+                if (!"player".equalsIgnoreCase(identityEntered) && !"op".equalsIgnoreCase(identityEntered) &&
+                    !"console".equalsIgnoreCase(identityEntered) && !"console_single_time".equalsIgnoreCase(identityEntered)) {
                     MsgBuilder.send(Msg.PROGRESS_TYPE_SET_FUNCTION_PRE_GAME_COMMAND_STEP_1_INCORRECT_EXECUTOR, player,
                             identityEntered);
                     return;
@@ -136,9 +136,9 @@ public class ProgressAutoUploadListener implements Listener {
         }
         if (step.getDataType().equals(Boolean.class)) {
             event.setCancelled(true);
-            if (enter.equalsIgnoreCase("T")) {
+            if ("T".equalsIgnoreCase(enter)) {
                 progress.next(true);
-            } else if (enter.equalsIgnoreCase("F")) {
+            } else if ("F".equalsIgnoreCase(enter)) {
                 progress.next(false);
             } else {
                 MsgBuilder.send(Msg.ERROR_INCORRECT_BOOLEAN, player);
@@ -192,12 +192,12 @@ public class ProgressAutoUploadListener implements Listener {
         Action action = event.getAction();
         Location location;
         if (step.hasAutoUploadTags(Step.AutoUploadTag.LOCATION_CONDITION_CLICK_AIR)) {
-            if (!action.equals(Action.LEFT_CLICK_AIR) && !action.equals(Action.RIGHT_CLICK_AIR)) {
+            if (action != Action.LEFT_CLICK_AIR && action != Action.RIGHT_CLICK_AIR) {
                 return;
             }
             location = player.getLocation();
         } else {
-            if (!action.equals(Action.LEFT_CLICK_BLOCK) && !action.equals(Action.RIGHT_CLICK_BLOCK)) {
+            if (action != Action.LEFT_CLICK_BLOCK && action != Action.RIGHT_CLICK_BLOCK) {
                 return;
             }
             location = event.getClickedBlock().getLocation();

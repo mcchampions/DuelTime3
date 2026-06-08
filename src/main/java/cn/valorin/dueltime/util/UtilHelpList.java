@@ -192,6 +192,7 @@ public class UtilHelpList {
         ;
 
         private static final Pattern PATTERN = Pattern.compile("]", Pattern.LITERAL);
+        private static final Pattern REGEX = Pattern.compile("[", Pattern.LITERAL);
         private final String placeHolderName;
         private final Msg msg;
 
@@ -203,11 +204,10 @@ public class UtilHelpList {
         //处理指令内容的单个碎片
         public static String deal(String arg, CommandSender sender) {
             for (Para para : values()) {
-                if (PATTERN.matcher(arg
+                if (PATTERN.matcher(REGEX.matcher(arg
                         .replace("%", "")
                         .replace("<", "")
-                        .replace(">", "")
-                        .replace("[", "")).replaceAll("").equals(para.placeHolderName)) {
+                        .replace(">", "")).replaceAll("")).replaceAll("").equals(para.placeHolderName)) {
                     return arg.replace("%" + para.placeHolderName + "%", MsgBuilder.get(para.msg, sender));
                 }
             }
@@ -223,11 +223,10 @@ public class UtilHelpList {
                     continue;
                 }
                 for (Para para : values()) {
-                    if (PATTERN.matcher(contentClip
+                    if (PATTERN.matcher(REGEX.matcher(contentClip
                             .replace("%", "")
                             .replace("<", "")
-                            .replace(">", "")
-                            .replace("[", "")).replaceAll("").equals(para.placeHolderName)) {
+                            .replace(">", "")).replaceAll("")).replaceAll("").equals(para.placeHolderName)) {
                         contentClip = contentClip.replace("%" + para.placeHolderName + "%", MsgBuilder.get(para.msg, sender));
                         contentDealtBuilder.append(" ").append(contentClip);
                     }

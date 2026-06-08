@@ -54,7 +54,7 @@ public class CMDArena extends SubCommand {
         }
         String singleCommandId = singleCommand.getId();
         ArenaManager arenaManager = DuelTimePlugin.getInstance().getArenaManager();
-        if (singleCommandId.equals("list")) {
+        if ("list".equals(singleCommandId)) {
             Collection<BaseArena> arenaList = arenaManager.getMap().values();
             if (arenaList.isEmpty()) {
                 MsgBuilder.send(Msg.COMMAND_SUB_ARENA_LIST_EMPTY, sender);
@@ -72,7 +72,7 @@ public class CMDArena extends SubCommand {
                     "" + index);
             return true;
         }
-        if (singleCommandId.equals("type")) {
+        if ("type".equals(singleCommandId)) {
             List<ArenaType> arenaTypeList = DuelTimePlugin.getInstance().getArenaTypeManager().getList();
             MsgBuilder.send(Msg.COMMAND_SUB_ARENA_TYPE_HEADING, sender, false);
             int index = 0;
@@ -89,72 +89,73 @@ public class CMDArena extends SubCommand {
             MsgBuilder.send(Msg.ERROR_NO_PERMISSION, sender);
             return true;
         }
-        if (singleCommandId.equals("create")) {
-            if (!(sender instanceof Player)) {
-                MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+        switch (singleCommandId) {
+            case "create":
+                if (!(sender instanceof Player)) {
+                    MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+                    return true;
+                }
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String typeIdEntered = args[2];
+                ArenaType arenaType = DuelTimePlugin.getInstance().getArenaTypeManager().get(typeIdEntered);
+                if (arenaType == null) {
+                    helpList.sendCorrect(sender, 2, singleCommand, label, args);
+                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_CREATE_FAIL_INVALID_TYPE, sender, true,
+                            typeIdEntered);
+                    UtilHelpList.sendSuggest(sender, 2,
+                            DuelTimePlugin.getInstance().getArenaTypeManager().getList().stream().map(ArenaType::getId).collect(Collectors.toList()),
+                            label, args);
+                    return true;
+                }
+                Player player = (Player) sender;
+                DuelTimePlugin.getInstance().getProgressManager().enter(player, ProgressType.createArena(player, arenaType));
+                return true;
+            case "view": {
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String idEntered = args[2];
+                BaseArena arena = arenaManager.get(idEntered);
+                if (arena == null) {
+                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_INVALID_ID, sender, true,
+                            idEntered);
+                    UtilHelpList.sendSuggest(sender, 2,
+                            arenaManager.getList().stream().map(BaseArena::getId).collect(Collectors.toList()),
+                            label, args);
+                    return true;
+                }
+                BaseArenaData arenaData = arena.getArenaData();
+                MsgBuilder.sendsClickable(Msg.COMMAND_SUB_ARENA_VIEW, sender, true,
+                        arenaData.getName(),
+                        arenaData.getId(),
+                        DuelTimePlugin.getInstance().getArenaTypeManager().get(arenaData.getTypeId()).getName(sender),
+                        (arenaData.getFunctions() != null) ? "" + arenaData.getFunctions().size() : "0");
                 return true;
             }
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            String typeIdEntered = args[2];
-            ArenaType arenaType = DuelTimePlugin.getInstance().getArenaTypeManager().get(typeIdEntered);
-            if (arenaType == null) {
-                helpList.sendCorrect(sender, 2, singleCommand, label, args);
-                MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_CREATE_FAIL_INVALID_TYPE, sender, true,
-                        typeIdEntered);
-                UtilHelpList.sendSuggest(sender, 2,
-                        DuelTimePlugin.getInstance().getArenaTypeManager().getList().stream().map(ArenaType::getId).collect(Collectors.toList()),
-                        label, args);
-                return true;
-            }
-            Player player = (Player) sender;
-            DuelTimePlugin.getInstance().getProgressManager().enter(player, ProgressType.createArena(player, arenaType));
-            return true;
-        }
-        if (singleCommandId.equals("view")) {
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            String idEntered = args[2];
-            BaseArena arena = arenaManager.get(idEntered);
-            if (arena == null) {
-                MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_INVALID_ID, sender, true,
+            case "delete": {
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String idEntered = args[2];
+                BaseArena arena = arenaManager.get(idEntered);
+                if (arena == null) {
+                    MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_INVALID_ID, sender, true,
+                            idEntered);
+                    UtilHelpList.sendSuggest(sender, 2,
+                            arenaManager.getList().stream().map(BaseArena::getId).collect(Collectors.toList()),
+                            label, args);
+                    return true;
+                }
+                arenaManager.delete(idEntered);
+                MsgBuilder.send(Msg.COMMAND_SUB_ARENA_DELETE_SUCCESSFULLY, sender,
                         idEntered);
-                UtilHelpList.sendSuggest(sender, 2,
-                        arenaManager.getList().stream().map(BaseArena::getId).collect(Collectors.toList()),
-                        label, args);
                 return true;
             }
-            BaseArenaData arenaData = arena.getArenaData();
-            MsgBuilder.sendsClickable(Msg.COMMAND_SUB_ARENA_VIEW, sender, true,
-                    arenaData.getName(),
-                    arenaData.getId(),
-                    DuelTimePlugin.getInstance().getArenaTypeManager().get(arenaData.getTypeId()).getName(sender),
-                    (arenaData.getFunctions() != null) ? "" + arenaData.getFunctions().size() : "0");
-            return true;
-        }
-        if (singleCommandId.equals("delete")) {
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            String idEntered = args[2];
-            BaseArena arena = arenaManager.get(idEntered);
-            if (arena == null) {
-                MsgBuilder.sendClickable(Msg.COMMAND_SUB_ARENA_INVALID_ID, sender, true,
-                        idEntered);
-                UtilHelpList.sendSuggest(sender, 2,
-                        arenaManager.getList().stream().map(BaseArena::getId).collect(Collectors.toList()),
-                        label, args);
-                return true;
-            }
-            arenaManager.delete(idEntered);
-            MsgBuilder.send(Msg.COMMAND_SUB_ARENA_DELETE_SUCCESSFULLY, sender,
-                    idEntered);
-            return true;
         }
         if (singleCommandId.startsWith("function")) {
             //如果参数不足，则默认想输入add
@@ -163,13 +164,13 @@ public class CMDArena extends SubCommand {
                 return true;
             }
             ArenaTypeManager arenaTypeManager = DuelTimePlugin.getInstance().getArenaTypeManager();
-            boolean isAdd = args[2].equalsIgnoreCase("add") || args[2].equalsIgnoreCase("a");
-            boolean isRemove = args[2].equalsIgnoreCase("remove") || args[2].equalsIgnoreCase("r");
-            boolean isReset = args[2].equalsIgnoreCase("reset") || args[2].equalsIgnoreCase("rs");
-            boolean isClear = args[2].equalsIgnoreCase("clear") || args[2].equalsIgnoreCase("c");
-            boolean isList = args[2].equalsIgnoreCase("list") || args[2].equalsIgnoreCase("l");
-            boolean isType = args[2].equalsIgnoreCase("type") || args[2].equalsIgnoreCase("t");
-            boolean isCopy = args[2].equalsIgnoreCase("copy") || args[2].equalsIgnoreCase("cp");
+            boolean isAdd = "add".equalsIgnoreCase(args[2]) || "a".equalsIgnoreCase(args[2]);
+            boolean isRemove = "remove".equalsIgnoreCase(args[2]) || "r".equalsIgnoreCase(args[2]);
+            boolean isReset = "reset".equalsIgnoreCase(args[2]) || "rs".equalsIgnoreCase(args[2]);
+            boolean isClear = "clear".equalsIgnoreCase(args[2]) || "c".equalsIgnoreCase(args[2]);
+            boolean isList = "list".equalsIgnoreCase(args[2]) || "l".equalsIgnoreCase(args[2]);
+            boolean isType = "type".equalsIgnoreCase(args[2]) || "t".equalsIgnoreCase(args[2]);
+            boolean isCopy = "copy".equalsIgnoreCase(args[2]) || "cp".equalsIgnoreCase(args[2]);
             if (isType || isCopy) {
                 if (isType) {
                     //function系列的type指令

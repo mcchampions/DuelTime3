@@ -92,7 +92,7 @@ public class Step {
             return false;
         }
         for (AutoUploadTag autoUploadTagDefined : autoUploadTags) {
-            if (autoUploadTagDefined.equals(autoUploadTag)) {
+            if (autoUploadTagDefined == autoUploadTag) {
                 return true;
             }
         }

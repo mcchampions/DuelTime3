@@ -28,7 +28,7 @@ public class ProgressOperateListener implements Listener {
             return;
         }
         String message = event.getMessage();
-        if (message.equalsIgnoreCase("-r") || message.equalsIgnoreCase("-reverse")) {
+        if ("-r".equalsIgnoreCase(message) || "-reverse".equalsIgnoreCase(message)) {
             event.setCancelled(true);
             if (progress.getFinishedStep() == 0) {
                 MsgBuilder.send(Msg.PROGRESS_OPERATION_REVERSE_THE_FIRST_STEP, player);
@@ -38,7 +38,7 @@ public class ProgressOperateListener implements Listener {
             MsgBuilder.sendTitle(Msg.PROGRESS_OPERATION_REVERSE_TITLE, Msg.PROGRESS_OPERATION_REVERSE_SUBTITLE, 0, 30, 5, player, ViaVersion.TitleType.SUBTITLE);
             return;
         }
-        if (message.equalsIgnoreCase("-p") || message.equalsIgnoreCase("-pause")) {
+        if ("-p".equalsIgnoreCase(message) || "-pause".equalsIgnoreCase(message)) {
             event.setCancelled(true);
             if (progress.isPaused()) {
                 MsgBuilder.send(Msg.PROGRESS_OPERATION_PAUSE_HAS_BEEN_PAUSED, player);
@@ -48,7 +48,7 @@ public class ProgressOperateListener implements Listener {
             MsgBuilder.sendTitle(Msg.PROGRESS_OPERATION_PAUSE_TITLE, Msg.PROGRESS_OPERATION_PAUSE_SUBTITLE, 0, 30, 5, player, ViaVersion.TitleType.SUBTITLE);
             return;
         }
-        if (message.equalsIgnoreCase("-c") || message.equalsIgnoreCase("-continue")) {
+        if ("-c".equalsIgnoreCase(message) || "-continue".equalsIgnoreCase(message)) {
             event.setCancelled(true);
             if (!progress.isPaused()) {
                 MsgBuilder.send(Msg.PROGRESS_OPERATION_CONTINUE_HAS_BEEN_PAUSED, player);
@@ -58,12 +58,12 @@ public class ProgressOperateListener implements Listener {
             MsgBuilder.sendTitle(Msg.PROGRESS_OPERATION_CONTINUE_TITLE, Msg.PROGRESS_OPERATION_CONTINUE_SUBTITLE, 0, 30, 5, player, ViaVersion.TitleType.SUBTITLE);
             return;
         }
-        if (message.equalsIgnoreCase("-e") || message.equalsIgnoreCase("-exit")) {
+        if ("-e".equalsIgnoreCase(message) || "-exit".equalsIgnoreCase(message)) {
             event.setCancelled(true);
             progressManager.exit(player.getName());
             MsgBuilder.send(Msg.PROGRESS_OPERATION_EXIT_SUCCESSFULLY, player, progress.getName());
         }
-        if (message.equalsIgnoreCase("-l") || message.equalsIgnoreCase("-list")) {
+        if ("-l".equalsIgnoreCase(message) || "-list".equalsIgnoreCase(message)) {
             event.setCancelled(true);
             if (!progress.getNowStep().getDataType().equals(List.class)) {
                 MsgBuilder.send(Msg.PROGRESS_OPERATION_LIST_INCORRECT_DATA_TYPE, player, progress.getName());

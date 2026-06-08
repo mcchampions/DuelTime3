@@ -61,131 +61,132 @@ public class CMDShop extends SubCommand {
             return true;
         }
         String singleCommandId = singleCommand.getId();
-        if (singleCommandId.equals("help")) {
-            helpList.send(sender, label, args[0]);
-            return true;
-        }
-        if (singleCommandId.equals("add")) {
-            if (!(sender instanceof Player)) {
-                MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+        switch (singleCommandId) {
+            case "help":
+                helpList.send(sender, label, args[0]);
                 return true;
-            }
-            if (ViaVersionItem.getItemInMainHand((Player) sender).getType().equals(Material.AIR)) {
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_ADD_EMPTY_ITEMSTACK, sender);
-                return true;
-            }
-            if (args.length < 3) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            String pointEnteredString = args[2];
-            if (!UtilFormat.isDouble(pointEnteredString)) {
-                helpList.sendCorrect(sender, 2, singleCommand, label, args);
-                MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender,
-                        pointEnteredString);
-                return true;
-            }
-            double pointEntered = Double.parseDouble(pointEnteredString);
-            if (pointEntered <= 0) {
-                MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender,
-                        pointEnteredString);
-                return true;
-            }
-            ItemStack itemStack = ViaVersionItem.getItemInMainHand(((Player) sender));
-            String description = args.length >= 4 ?
-                    REGEX.matcher(args[3].replace("&", "§")).replaceAll(" ") :
-                    null;
-            cache.add(itemStack, pointEntered, 0, description, null);
-            int[] loc = ShopCache.getLocByIndex(cache.getList().size() - 1);
-            MsgBuilder.send(Msg.COMMAND_SUB_SHOP_ADD_SUCCESSFULLY, sender,
-                    "" + loc[0], "" + loc[1], "" + loc[2]);
-            return true;
-        }
-        if (singleCommandId.equals("delete")) {
-            if (args.length < 5) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            int[] loc = checkLocFormat(2, sender, singleCommand, label, args);
-            if (loc == null) {
-                return true;
-            }
-            boolean delete = cache.delete(loc[0], loc[1], loc[2]);
-            if (!delete) {
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_INVALID_LOC, sender,
-                        "" + loc[0], "" + loc[1], "" + loc[2]);
-                return true;
-            }
-            MsgBuilder.send(Msg.COMMAND_SUB_SHOP_DELETE_SUCCESSFULLY, sender,
-                    "" + loc[0], "" + loc[1], "" + loc[2]);
-            return true;
-        }
-        if (singleCommandId.equals("reset")) {
-            if (args.length < 7) {
-                helpList.sendCorrect(sender, -1, singleCommand, label, args);
-                return true;
-            }
-            boolean isPoint = args[2].equalsIgnoreCase("point") || args[2].equalsIgnoreCase("p");
-            boolean isDescription = args[2].equalsIgnoreCase("description") || args[2].equalsIgnoreCase("d");
-            boolean isLevel = args[2].equalsIgnoreCase("level") || args[2].equalsIgnoreCase("l");
-            if (!isPoint && !isDescription && !isLevel) {
-                helpList.sendCorrect(sender, 2, singleCommand, label, args);
-                return true;
-            }
-            int[] loc = checkLocFormat(3, sender, singleCommand, label, args);
-            if (loc == null) {
-                return true;
-            }
-            ShopRewardData rewardData = cache.get(loc[0], loc[1], loc[2]);
-            if (rewardData == null) {
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_INVALID_LOC, sender,
-                        "" + loc[0], "" + loc[1], "" + loc[2]);
-                return true;
-            }
-            if (isPoint) {
-                String pointEnteredString = args[6];
+            case "add": {
+                if (!(sender instanceof Player)) {
+                    MsgBuilder.send(Msg.ERROR_NOT_PLAYER_EXECUTOR, sender);
+                    return true;
+                }
+                if (ViaVersionItem.getItemInMainHand((Player) sender).getType() == Material.AIR) {
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_ADD_EMPTY_ITEMSTACK, sender);
+                    return true;
+                }
+                if (args.length < 3) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                String pointEnteredString = args[2];
                 if (!UtilFormat.isDouble(pointEnteredString)) {
-                    helpList.sendCorrect(sender, 3, singleCommand, label, args);
+                    helpList.sendCorrect(sender, 2, singleCommand, label, args);
                     MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender,
                             pointEnteredString);
                     return true;
                 }
                 double pointEntered = Double.parseDouble(pointEnteredString);
                 if (pointEntered <= 0) {
-                    MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender, pointEnteredString);
-                    return true;
-                }
-                rewardData.setPoint(pointEntered);
-                cache.set(loc[0], loc[1], loc[2], rewardData);
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_POINT_SUCCESSFULLY, sender,
-                        pointEnteredString, "" + loc[0], "" + loc[1], "" + loc[2]);
-            } else if (isDescription) {
-                //将输入内容中的下划线转化为空格，同时替换颜色符号
-                String description = PATTERN.matcher(args[6].replace("_", " ")).replaceAll("§");
-                rewardData.setDescription(description);
-                cache.set(loc[0], loc[1], loc[2], rewardData);
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_DESCRIPTION_SUCCESSFULLY, sender,
-                        description, "" + loc[0], "" + loc[1], "" + loc[2]);
-            } else {
-                String levelEnteredString = args[6];
-                if (!UtilFormat.isInt(levelEnteredString)) {
-                    helpList.sendCorrect(sender, 3, singleCommand, label, args);
-                    MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender,
-                            levelEnteredString);
-                    return true;
-                }
-                int levelEntered = Integer.parseInt(levelEnteredString);
-                if (levelEntered <= 0) {
                     MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender,
-                            levelEnteredString);
+                            pointEnteredString);
                     return true;
                 }
-                rewardData.setLevelLimit(levelEntered);
-                cache.set(loc[0], loc[1], loc[2], rewardData);
-                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_LEVEL_LIMIT_SUCCESSFULLY, sender,
-                        levelEnteredString, "" + loc[0], "" + loc[1], "" + loc[2]);
+                ItemStack itemStack = ViaVersionItem.getItemInMainHand(((Player) sender));
+                String description = args.length >= 4 ?
+                        REGEX.matcher(PATTERN.matcher(args[3]).replaceAll("§")).replaceAll(" ") :
+                        null;
+                cache.add(itemStack, pointEntered, 0, description, null);
+                int[] loc = ShopCache.getLocByIndex(cache.getList().size() - 1);
+                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_ADD_SUCCESSFULLY, sender,
+                        "" + loc[0], "" + loc[1], "" + loc[2]);
+                return true;
             }
-            return true;
+            case "delete": {
+                if (args.length < 5) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                int[] loc = checkLocFormat(2, sender, singleCommand, label, args);
+                if (loc == null) {
+                    return true;
+                }
+                boolean delete = cache.delete(loc[0], loc[1], loc[2]);
+                if (!delete) {
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_INVALID_LOC, sender,
+                            "" + loc[0], "" + loc[1], "" + loc[2]);
+                    return true;
+                }
+                MsgBuilder.send(Msg.COMMAND_SUB_SHOP_DELETE_SUCCESSFULLY, sender,
+                        "" + loc[0], "" + loc[1], "" + loc[2]);
+                return true;
+            }
+            case "reset": {
+                if (args.length < 7) {
+                    helpList.sendCorrect(sender, -1, singleCommand, label, args);
+                    return true;
+                }
+                boolean isPoint = "point".equalsIgnoreCase(args[2]) || "p".equalsIgnoreCase(args[2]);
+                boolean isDescription = "description".equalsIgnoreCase(args[2]) || "d".equalsIgnoreCase(args[2]);
+                boolean isLevel = "level".equalsIgnoreCase(args[2]) || "l".equalsIgnoreCase(args[2]);
+                if (!isPoint && !isDescription && !isLevel) {
+                    helpList.sendCorrect(sender, 2, singleCommand, label, args);
+                    return true;
+                }
+                int[] loc = checkLocFormat(3, sender, singleCommand, label, args);
+                if (loc == null) {
+                    return true;
+                }
+                ShopRewardData rewardData = cache.get(loc[0], loc[1], loc[2]);
+                if (rewardData == null) {
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_INVALID_LOC, sender,
+                            "" + loc[0], "" + loc[1], "" + loc[2]);
+                    return true;
+                }
+                if (isPoint) {
+                    String pointEnteredString = args[6];
+                    if (!UtilFormat.isDouble(pointEnteredString)) {
+                        helpList.sendCorrect(sender, 3, singleCommand, label, args);
+                        MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender,
+                                pointEnteredString);
+                        return true;
+                    }
+                    double pointEntered = Double.parseDouble(pointEnteredString);
+                    if (pointEntered <= 0) {
+                        MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender, pointEnteredString);
+                        return true;
+                    }
+                    rewardData.setPoint(pointEntered);
+                    cache.set(loc[0], loc[1], loc[2], rewardData);
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_POINT_SUCCESSFULLY, sender,
+                            pointEnteredString, "" + loc[0], "" + loc[1], "" + loc[2]);
+                } else if (isDescription) {
+                    //将输入内容中的下划线转化为空格，同时替换颜色符号
+                    String description = PATTERN.matcher(REGEX.matcher(args[6]).replaceAll(" ")).replaceAll("§");
+                    rewardData.setDescription(description);
+                    cache.set(loc[0], loc[1], loc[2], rewardData);
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_DESCRIPTION_SUCCESSFULLY, sender,
+                            description, "" + loc[0], "" + loc[1], "" + loc[2]);
+                } else {
+                    String levelEnteredString = args[6];
+                    if (!UtilFormat.isInt(levelEnteredString)) {
+                        helpList.sendCorrect(sender, 3, singleCommand, label, args);
+                        MsgBuilder.send(Msg.ERROR_INCORRECT_NUMBER_FORMAT, sender,
+                                levelEnteredString);
+                        return true;
+                    }
+                    int levelEntered = Integer.parseInt(levelEnteredString);
+                    if (levelEntered <= 0) {
+                        MsgBuilder.send(Msg.ERROR_VALUE_IS_NOT_POSITIVE, sender,
+                                levelEnteredString);
+                        return true;
+                    }
+                    rewardData.setLevelLimit(levelEntered);
+                    cache.set(loc[0], loc[1], loc[2], rewardData);
+                    MsgBuilder.send(Msg.COMMAND_SUB_SHOP_RESET_LEVEL_LIMIT_SUCCESSFULLY, sender,
+                            levelEnteredString, "" + loc[0], "" + loc[1], "" + loc[2]);
+                }
+                return true;
+            }
         }
         if (singleCommandId.startsWith("command")) {
             //如果参数不足，则默认想输入add
@@ -193,10 +194,10 @@ public class CMDShop extends SubCommand {
                 helpList.sendCorrect(sender, 2, helpList.getSubCommandById("command_add"), label, args);
                 return true;
             }
-            boolean isAdd = args[2].equalsIgnoreCase("add") || args[2].equalsIgnoreCase("a");
-            boolean isRemove = args[2].equalsIgnoreCase("remove") || args[2].equalsIgnoreCase("r");
-            boolean isClear = args[2].equalsIgnoreCase("clear") || args[2].equalsIgnoreCase("c");
-            boolean isView = args[2].equalsIgnoreCase("list") || args[2].equalsIgnoreCase("l");
+            boolean isAdd = "add".equalsIgnoreCase(args[2]) || "a".equalsIgnoreCase(args[2]);
+            boolean isRemove = "remove".equalsIgnoreCase(args[2]) || "r".equalsIgnoreCase(args[2]);
+            boolean isClear = "clear".equalsIgnoreCase(args[2]) || "c".equalsIgnoreCase(args[2]);
+            boolean isView = "list".equalsIgnoreCase(args[2]) || "l".equalsIgnoreCase(args[2]);
             if (isAdd || isRemove) {
                 singleCommand = isAdd ? helpList.getSubCommandById("command_add") : helpList.getSubCommandById("command_remove");
                 if (args.length < (isAdd ? 8 : 6)) {
@@ -247,7 +248,7 @@ public class CMDShop extends SubCommand {
                             return true;
                     }
                     //将输入内容中的下划线转化为空格，同时替换颜色符号
-                    String commandContent = PATTERN.matcher(args[7].replace("_", " ")).replaceAll("§");
+                    String commandContent = PATTERN.matcher(REGEX.matcher(args[7]).replaceAll(" ")).replaceAll("§");
                     commands.add(commandExecutorEntered + ":" + commandContent);
                     rewardData.setCommands(commands);
                     cache.set(loc[0], loc[1], loc[2], rewardData);
@@ -302,7 +303,7 @@ public class CMDShop extends SubCommand {
                             "" + loc[0], "" + loc[1], "" + loc[2]);
                     return true;
                 }
-                if (singleCommandId.equals("command_clear")) {
+                if ("command_clear".equals(singleCommandId)) {
                     rewardData.setCommands(null);
                     cache.set(loc[0], loc[1], loc[2], rewardData);
                     MsgBuilder.send(Msg.COMMAND_SUB_SHOP_COMMAND_CLEAR_SUCCESSFULLY, sender);
