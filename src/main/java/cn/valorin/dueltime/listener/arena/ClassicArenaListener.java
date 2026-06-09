@@ -412,6 +412,9 @@ public class ClassicArenaListener implements Listener {
         ClassicArena arena = (ClassicArena) baseArena;
         Player player = event.getPlayer();
         ClassicSpectatorData spectatorData = (ClassicSpectatorData) arena.getSpector(player.getName());
+        if (spectatorData == null) {
+            return;
+        }
         if (arena.getArenaData().hasFunction(ArenaType.FunctionInternalType.CLASSIC_SPECTATE) && (boolean) (arena.getArenaData().getFunctionData(CLASSIC_SPECTATE)[3])) {
             for (BossBar bossBar : arena.getHealthBossBars().values()) {
                 bossBar.removePlayer(player);
@@ -485,14 +488,19 @@ public class ClassicArenaListener implements Listener {
         if (spectateLeaveWorldSkipCheck.contains(player.getName())) return;
         ArenaManager arenaManager = DuelTimePlugin.getInstance().getArenaManager();
         BaseArena arena = arenaManager.getSpectate(player);
-        if (arena == null) {
+        if (arena == null || event.getTo() == null || event.getTo().getWorld() == null) {
             return;
         }
         if (event.getTo().getWorld().getName().equals(arena.getArenaData().getDiagonalPointLocation1().getWorld().getName())) {
             return;
         }
+        ClassicSpectatorData spectatorData = (ClassicSpectatorData) arena.getSpector(player.getName());
+        if (spectatorData == null) {
+            arenaManager.removeSpectator(player);
+            return;
+        }
         if (DuelTimePlugin.serverVersionInt >= 8) {
-            player.setGameMode(((ClassicSpectatorData) arena.getSpector(player.getName())).getOriginalGameMode());
+            player.setGameMode(spectatorData.getOriginalGameMode());
         }
         arenaManager.removeSpectator(player);
     }
@@ -509,8 +517,13 @@ public class ClassicArenaListener implements Listener {
         if (arena == null) {
             return;
         }
+        ClassicSpectatorData spectatorData = (ClassicSpectatorData) arena.getSpector(player.getName());
+        if (spectatorData == null) {
+            arenaManager.removeSpectator(player);
+            return;
+        }
         if (DuelTimePlugin.serverVersionInt >= 8) {
-            player.setGameMode(((ClassicSpectatorData) arena.getSpector(player.getName())).getOriginalGameMode());
+            player.setGameMode(spectatorData.getOriginalGameMode());
         }
         arenaManager.removeSpectator(player);
     }

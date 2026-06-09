@@ -172,10 +172,10 @@ public class Progress {
         //根据需要实现视觉延时
         if (isBossBarUsed) {
             if (delayed) {
-                Bukkit.getScheduler().runTaskLaterAsynchronously(DuelTimePlugin.getInstance(),
+                Bukkit.getScheduler().runTaskLater(DuelTimePlugin.getInstance(),
                         progressBar::removeAll, 80);
                 if (finishedStep >= totalStep) {
-                    Bukkit.getScheduler().runTaskLaterAsynchronously(DuelTimePlugin.getInstance(), () -> {
+                    Bukkit.getScheduler().runTaskLater(DuelTimePlugin.getInstance(), () -> {
                         MsgBuilder.send(Msg.PROGRESS_FINISH_MESSAGE, player, getName());
                         MsgBuilder.sendTitle(
                                 MsgBuilder.get(Msg.PROGRESS_FINISH_TITLE, player),

@@ -31,7 +31,7 @@ public class ProgressStartListener implements Listener {
                     progress.getSteps()[0].getTip());
         }
         if (progress.getId().equals(CREATE_CLASSIC_ARENA.getId()) || progress.getId().equals(ADD_FUNCTION_CLASSIC_SPECTATE.getId())) {
-            progress.setTimer(Bukkit.getScheduler().runTaskTimerAsynchronously(DuelTimePlugin.getInstance(), () -> {
+            progress.setTimer(Bukkit.getScheduler().runTaskTimer(DuelTimePlugin.getInstance(), () -> {
                 //第二步执行完毕开始（即A、B点都选好后，开始绘线）
                 if (progress.getFinishedStep() >= 2) {
                     Location locationDiagonalA = (Location) progress.getSteps()[0].getData();

@@ -26,6 +26,9 @@ public class PlayerDataCache {
     private final Map<String, PlayerData> playerDataMap = new HashMap<>();
 
     public void reloadRefreshRankingTimer() {
+        if (refreshRankingTimer != null && !refreshRankingTimer.isCancelled()) {
+            refreshRankingTimer.cancel();
+        }
         int interval = DuelTimePlugin.getInstance().getCfgManager().getRankingAutoRefreshInterval();
         refreshRankingTimer = Bukkit.getScheduler().runTaskTimerAsynchronously(DuelTimePlugin.getInstance(), () -> {
             for (Ranking ranking : DuelTimePlugin.getInstance().getRankingManager().getRankings().values()) {
@@ -35,6 +38,7 @@ public class PlayerDataCache {
     }
 
     public void reload() {
+        playerDataMap.clear();
         SqlSessionFactory sqlSessionFactory = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass());
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             PlayerDataMapper mapper = sqlSession.getMapper(PlayerDataMapper.class);
@@ -70,7 +74,7 @@ public class PlayerDataCache {
     }
 
     public PlayerData get(String playerName) {
-        return playerDataMap.get(playerName).clone();
+        return getOrLoad(playerName).clone();
     }
 
     /**
@@ -102,8 +106,11 @@ public class PlayerDataCache {
     public void set(String playerName, PlayerData playerData) {
         PlayerData playerDataBefore = playerDataMap.get(playerName);
         LevelManager levelManager = DuelTimePlugin.getInstance().getLevelManager();
-        Tier tierBefore = levelManager.getTier(playerName);
-        int levelBefore = levelManager.getLevel(playerName);
+        if (playerDataBefore == null) {
+            playerDataBefore = getOrLoad(playerName);
+        }
+        Tier tierBefore = levelManager.getTier(playerName, playerDataBefore.getExp());
+        int levelBefore = levelManager.getLevel(playerName, playerDataBefore.getExp());
         playerDataMap.put(playerName, playerData);
         if (playerDataBefore.getExp() != playerData.getExp()) {
             //如果经验值发生了变更，则需通知LevelManager重新计算等级和段位名
@@ -142,5 +149,19 @@ public class PlayerDataCache {
 
     public BukkitTask getRefreshRankingTimer() {
         return refreshRankingTimer;
+    }
+
+    private PlayerData getOrLoad(String playerName) {
+        PlayerData playerData = playerDataMap.get(playerName);
+        if (playerData != null) {
+            return playerData;
+        }
+        playerData = getAnyway(playerName);
+        if (playerData == null) {
+            playerData = new PlayerData(playerName, 0, 0, null, 0, 0, 0, 0, 0, 0);
+        }
+        playerDataMap.put(playerName, playerData);
+        DuelTimePlugin.getInstance().getLevelManager().load(playerName, playerData.getExp());
+        return playerData;
     }
 }

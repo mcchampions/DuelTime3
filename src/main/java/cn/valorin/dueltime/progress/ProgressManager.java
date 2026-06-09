@@ -36,7 +36,10 @@ public class ProgressManager {
     }
 
     public void exit(String playerName) {
-        progressMap.get(playerName).exit();
+        Progress progress = progressMap.get(playerName);
+        if (progress != null) {
+            progress.exit();
+        }
     }
 
     //仅供Progress内部调用
@@ -45,9 +48,8 @@ public class ProgressManager {
     }
 
     public void exitAll() {
-        for (Progress progress : progressMap.values()) {
+        for (Progress progress : new HashMap<>(progressMap).values()) {
             progress.exit();
         }
     }
 }
-

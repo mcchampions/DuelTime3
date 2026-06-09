@@ -94,7 +94,9 @@ public final class DuelTimePlugin extends JavaPlugin {
             }
         }
         hologramManager.disable();
-        cacheManager.getPlayerDataCache().getRefreshRankingTimer().cancel();
+        if (cacheManager.getPlayerDataCache().getRefreshRankingTimer() != null) {
+            cacheManager.getPlayerDataCache().getRefreshRankingTimer().cancel();
+        }
         myBatisManager.closeConnection();
         progressManager.exitAll();
     }

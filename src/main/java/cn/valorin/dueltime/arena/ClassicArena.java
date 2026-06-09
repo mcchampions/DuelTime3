@@ -121,7 +121,7 @@ public class ClassicArena extends BaseArena {
         //初始化定时器
         stage = (getArenaData().hasFunction(CLASSIC_COUNTDOWN)) ? Stage.COUNTDOWN : Stage.GAME;
         time = -1;
-        timer = Bukkit.getScheduler().runTaskTimerAsynchronously(DuelTimePlugin.getInstance(),
+        timer = Bukkit.getScheduler().runTaskTimer(DuelTimePlugin.getInstance(),
                 () -> {
                     time++;
                     //检测是否为倒计时阶段
@@ -185,8 +185,7 @@ public class ClassicArena extends BaseArena {
                             for (BaseGamerData gamerData : getGamerDataList()) {
                                 ((ClassicGamerData) gamerData).confirmResult(ClassicArenaRecordData.Result.DRAW);
                             }
-                            Bukkit.getScheduler().runTask(DuelTimePlugin.getInstance(), () ->
-                                    DuelTimePlugin.getInstance().getArenaManager().end(getId()));
+                            DuelTimePlugin.getInstance().getArenaManager().end(getId());
                         }
                     }
                 },
@@ -196,7 +195,9 @@ public class ClassicArena extends BaseArena {
     @Override
     public void end() {
         //关闭计时器
-        timer.cancel();
+        if (timer != null && !timer.isCancelled()) {
+            timer.cancel();
+        }
         //关闭比赛限时附加功能的BossBar
         if (getArenaData().hasFunction(CLASSIC_TIME_LIMIT) && timeLimitBossBar != null) {
             timeLimitBossBar.removeAll();

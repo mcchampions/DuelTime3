@@ -39,6 +39,11 @@ public class ArenaManager {
      * 根据各个类型的场地数据(ArenaData)载入所有竞技场
      */
     public void reload() {
+        arenaMap.clear();
+        gamerArenaMap.clear();
+        spectatorArenaMap.clear();
+        waitingPlayerToArenaMap.clear();
+        waitingArenaToPlayersMap.clear();
         SqlSessionFactory sqlSessionFactory = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass());
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             //载入经典类型竞技场
@@ -172,6 +177,10 @@ public class ArenaManager {
     //过后添加一个自定义报错类型...............................................
     public void removeSpectator(Player player) {
         BaseArena arena = getSpectate(player);
+        if (arena == null) {
+            spectatorArenaMap.remove(player.getName());
+            return;
+        }
         ArenaTryToQuitSpectateEvent event = new ArenaTryToQuitSpectateEvent(player, arena);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (!event.isCancelled()) {
@@ -210,8 +219,18 @@ public class ArenaManager {
     }
 
     public void removeWaitingPlayer(Player player) {
-        waitingArenaToPlayersMap.get(waitingPlayerToArenaMap.get(player.getName())).remove(player.getName());
-        waitingPlayerToArenaMap.remove(player.getName());
+        String arenaId = waitingPlayerToArenaMap.remove(player.getName());
+        if (arenaId == null) {
+            updateStartInventory();
+            return;
+        }
+        List<String> waitingPlayers = waitingArenaToPlayersMap.get(arenaId);
+        if (waitingPlayers != null) {
+            waitingPlayers.remove(player.getName());
+            if (waitingPlayers.isEmpty()) {
+                waitingArenaToPlayersMap.remove(arenaId);
+            }
+        }
         updateStartInventory();
     }
 
