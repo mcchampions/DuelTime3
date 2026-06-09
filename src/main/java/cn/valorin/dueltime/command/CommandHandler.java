@@ -4,12 +4,15 @@ import cn.valorin.dueltime.command.sub.*;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class CommandHandler {
 
     private final Set<SubCommand> commands = new HashSet<>();
+    private final Map<String, SubCommand> commandByAlias = new HashMap<>();
 
     public CommandHandler() {
         commands.add(new CMDAccept());
@@ -33,6 +36,11 @@ public class CommandHandler {
         commands.add(new CMDReload());
         commands.add(new CMDStop());
         commands.add(new CMDClick());
+        for (SubCommand subCommand : commands) {
+            for (String alias : subCommand.getAliases()) {
+                commandByAlias.put(alias.toLowerCase(), subCommand);
+            }
+        }
         PluginCommand pluginCommand = Bukkit.getPluginCommand("dueltime");
         if (pluginCommand == null) {
             throw new IllegalStateException("Command dueltime is not defined in plugin.yml");
@@ -41,14 +49,7 @@ public class CommandHandler {
     }
 
     public SubCommand getSubCommand(String commandEntered) {
-        for (SubCommand subCommand : commands) {
-            for (String alias : subCommand.getAliases()) {
-                if (commandEntered.equalsIgnoreCase(alias)) {
-                    return subCommand;
-                }
-            }
-        }
-        return null;
+        return commandByAlias.get(commandEntered.toLowerCase());
     }
 
     public Set<SubCommand> getCommands() {

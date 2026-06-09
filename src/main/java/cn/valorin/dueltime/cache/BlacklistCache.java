@@ -8,10 +8,13 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BlacklistCache {
     private List<String> blacklist = new ArrayList<>();
+    private final Set<String> blacklistSet = new HashSet<>();
 
     public void reload() {
         SqlSessionFactory sqlSessionFactory = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass());
@@ -19,6 +22,8 @@ public class BlacklistCache {
             BlacklistMapper mapper = sqlSession.getMapper(BlacklistMapper.class);
             mapper.createTableIfNotExists();
             blacklist = mapper.get();
+            blacklistSet.clear();
+            blacklistSet.addAll(blacklist);
             UtilSync.publishEvent(new CacheInitializedEvent(this.getClass()));
         }
     }
@@ -29,6 +34,7 @@ public class BlacklistCache {
 
     public void add(String playerName) {
         blacklist.add(playerName);
+        blacklistSet.add(playerName);
         try (SqlSession sqlSession = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass()).openSession(true)) {
             sqlSession.getMapper(BlacklistMapper.class).add(playerName);
         }
@@ -37,12 +43,13 @@ public class BlacklistCache {
 
     public void remove(String playerName) {
         blacklist.remove(playerName);
+        blacklistSet.remove(playerName);
         try (SqlSession sqlSession = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass()).openSession(true)) {
             sqlSession.getMapper(BlacklistMapper.class).remove(playerName);
         }
     }
 
     public boolean contains(String playerName) {
-        return blacklist.contains(playerName);
+        return blacklistSet.contains(playerName);
     }
 }

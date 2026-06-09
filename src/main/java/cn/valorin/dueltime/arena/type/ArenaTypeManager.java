@@ -17,6 +17,7 @@ import static cn.valorin.dueltime.progress.Step.AutoUploadTag.*;
 
 public class ArenaTypeManager {
     private final List<ArenaType> arenaTypeList = new ArrayList<>();
+    private final Map<String, ArenaType> arenaTypeMap = new HashMap<>();
 
     public ArenaTypeManager() {
         reload();
@@ -255,18 +256,19 @@ public class ArenaTypeManager {
                         //经典竞技场所采用的预设
                         presets
                 ));
+        Map<String, ArenaType> loadedArenaTypeMap = new HashMap<>();
+        for (ArenaType arenaType : loadedArenaTypeList) {
+            loadedArenaTypeMap.put(arenaType.getId(), arenaType);
+        }
         arenaTypeList.clear();
         arenaTypeList.addAll(loadedArenaTypeList);
+        arenaTypeMap.clear();
+        arenaTypeMap.putAll(loadedArenaTypeMap);
     }
 
     public ArenaType get(String id) {
         if (!id.contains(":")) id = "dueltime:" + id;
-        for (ArenaType type : arenaTypeList) {
-            if (type.getId().equals(id)) {
-                return type;
-            }
-        }
-        return null;
+        return arenaTypeMap.get(id);
     }
 
     public List<ArenaType> getList() {

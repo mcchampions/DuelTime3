@@ -42,6 +42,10 @@ public class BaseArenaListener implements Listener {
         if (to == null) {
             return;
         }
+        Location from = event.getFrom();
+        if (from.getBlockX() == to.getBlockX() && from.getBlockY() == to.getBlockY() && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
         BaseArena arena = UtilGeometry.getArena(to);
         if (arena != null) {
             if (arena.getState() == BaseArena.State.WAITING || arena.getState() == BaseArena.State.DISABLED) {
