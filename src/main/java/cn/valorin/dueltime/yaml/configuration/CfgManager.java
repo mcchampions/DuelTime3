@@ -51,11 +51,15 @@ public class CfgManager {
         }
         defaultLanguage = config.getString("Message.default-language");
         boolean hasDefaultLanguageEntered = false;
-        if (new File(DuelTimePlugin.getInstance().getDataFolder(), "languages").exists()) {
-            for (File languageFile : new File(DuelTimePlugin.getInstance().getDataFolder(), "languages").listFiles()) {
-                if (languageFile.getName().equals(defaultLanguage + ".yml") || languageFile.getName().equals(defaultLanguage + ".yaml")) {
-                    hasDefaultLanguageEntered = true;
-                    break;
+        File languageFolder = new File(DuelTimePlugin.getInstance().getDataFolder(), "languages");
+        if (languageFolder.exists()) {
+            File[] languageFiles = languageFolder.listFiles();
+            if (languageFiles != null) {
+                for (File languageFile : languageFiles) {
+                    if (languageFile.getName().equals(defaultLanguage + ".yml") || languageFile.getName().equals(defaultLanguage + ".yaml")) {
+                        hasDefaultLanguageEntered = true;
+                        break;
+                    }
                 }
             }
         }

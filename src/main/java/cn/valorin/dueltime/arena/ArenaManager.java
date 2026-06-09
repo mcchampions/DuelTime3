@@ -39,11 +39,7 @@ public class ArenaManager {
      * 根据各个类型的场地数据(ArenaData)载入所有竞技场
      */
     public void reload() {
-        arenaMap.clear();
-        gamerArenaMap.clear();
-        spectatorArenaMap.clear();
-        waitingPlayerToArenaMap.clear();
-        waitingArenaToPlayersMap.clear();
+        Map<String, BaseArena> loadedArenaMap = new HashMap<>();
         SqlSessionFactory sqlSessionFactory = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass());
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             //载入经典类型竞技场
@@ -57,9 +53,15 @@ public class ArenaManager {
                     e.printStackTrace();
                     continue;
                 }
-                arenaMap.put(arenaData.getId(), classicArena);
+                loadedArenaMap.put(arenaData.getId(), classicArena);
             }
             //载入其他类型竞技场...
+            arenaMap.clear();
+            arenaMap.putAll(loadedArenaMap);
+            gamerArenaMap.clear();
+            spectatorArenaMap.clear();
+            waitingPlayerToArenaMap.clear();
+            waitingArenaToPlayersMap.clear();
         }
     }
 

@@ -26,6 +26,7 @@ public class ArenaTypeManager {
      * （重新）载入所有种类定义
      */
     public void reload() {
+        List<ArenaType> loadedArenaTypeList = new ArrayList<>();
         Step[] steps = new Step[]{
                 //点击方块确定空间对角点1
                 new Step(
@@ -235,7 +236,7 @@ public class ArenaTypeManager {
                     put(ArenaType.PresetType.PROTECTION_BLOCK_IGNITED, null);
                     put(ArenaType.PresetType.PROTECTION_BLOCK_BURNING, null);
                 }};
-        arenaTypeList.add(
+        loadedArenaTypeList.add(
                 new ArenaType(
                         //本插件实例
                         DuelTimePlugin.getInstance(),
@@ -254,6 +255,8 @@ public class ArenaTypeManager {
                         //经典竞技场所采用的预设
                         presets
                 ));
+        arenaTypeList.clear();
+        arenaTypeList.addAll(loadedArenaTypeList);
     }
 
     public ArenaType get(String id) {

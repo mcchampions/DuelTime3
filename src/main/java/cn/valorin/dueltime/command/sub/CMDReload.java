@@ -30,10 +30,12 @@ public class CMDReload extends SubCommand {
         }
         DuelTimePlugin.getInstance().getHologramManager().disable();
         ins.getCfgManager().reload();
+        ins.getLevelManager().reloadSettings();
         ins.getMsgManager().check();
         ins.getMsgManager().reload();
         ins.getMyBatisManager().closeConnection();
         ins.getMyBatisManager().connectToDatabase();
+        ins.getArenaTypeManager().reload();
         ins.getArenaManager().reload();
         ins.getCacheManager().reload();
         long end = System.currentTimeMillis();

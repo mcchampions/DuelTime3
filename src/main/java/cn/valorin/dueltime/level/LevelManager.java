@@ -48,26 +48,34 @@ public class LevelManager {
     }
 
     public int calculateLevel(double exp) {
+        return calculateLevel(exp, tiers);
+    }
+
+    private int calculateLevel(double exp, List<Tier> tiersUsed) {
         int currentLevel = 0;
         double totalExpNeeded = 0;
-        for (int i = 0; i < tiers.size(); i++) {
-            Tier currentTier = tiers.get(i);
-            double expForThisTier = currentTier.getExpForLevelUp() * (i == tiers.size() - 1 ?
+        for (int i = 0; i < tiersUsed.size(); i++) {
+            Tier currentTier = tiersUsed.get(i);
+            double expForThisTier = currentTier.getExpForLevelUp() * (i == tiersUsed.size() - 1 ?
                     Double.MAX_VALUE :
-                    tiers.get(i + 1).getLevel() - currentTier.getLevel());
+                    tiersUsed.get(i + 1).getLevel() - currentTier.getLevel());
             if (exp < totalExpNeeded + expForThisTier) {
                 currentLevel += (int) ((exp - totalExpNeeded) / currentTier.getExpForLevelUp());
                 break;
             }
             totalExpNeeded += expForThisTier;
-            currentLevel = tiers.get(i + 1).getLevel();
+            currentLevel = tiersUsed.get(i + 1).getLevel();
         }
         return currentLevel;
     }
 
     public Tier calculateTier(int level) {
-        Tier tier = tiers.get(0);
-        for (Tier nowTier : tiers) {
+        return calculateTier(level, tiers);
+    }
+
+    private Tier calculateTier(int level, List<Tier> tiersUsed) {
+        Tier tier = tiersUsed.get(0);
+        for (Tier nowTier : tiersUsed) {
             if (level < nowTier.getLevel()) {
                 break;
             }
@@ -150,8 +158,14 @@ public class LevelManager {
         String defaultTitle = PATTERN.matcher(config.getString("Level.tier.default.title")).replaceAll("§");
         int defaultExpForLevelUp = config.getInt("Level.tier.default.exp-for-level-up");
         String DEFAULT_ID = "default";
-        tiers.add(new Tier(DEFAULT_ID, 0, defaultTitle, defaultExpForLevelUp));
+        List<Tier> loadedTiers = new ArrayList<>();
+        loadedTiers.add(new Tier(DEFAULT_ID, 0, defaultTitle, defaultExpForLevelUp));
         String path = "Level.tier.custom";
+        if (config.getConfigurationSection(path) == null) {
+            tiers.clear();
+            tiers.addAll(loadedTiers);
+            return;
+        }
         List<Integer> levelDefinedList = new ArrayList<>();
         for (String id : config.getConfigurationSection(path).getKeys(false)) {
             if (id.equals(DEFAULT_ID)) {
@@ -179,15 +193,34 @@ public class LevelManager {
             String title = PATTERN.matcher(config.getString(path + "." + id + ".title")).replaceAll("§");
             Tier tier = new Tier(id, level, title, expForLevelUp);
             int index = 0;
-            while (index < tiers.size() && level > tiers.get(index).getLevel()) {
+            while (index < loadedTiers.size() && level > loadedTiers.get(index).getLevel()) {
                 /*
                 index即为当前所比较对象对应的索引值
                 由于customNameList按level属性保持升序，现在则按索引值顺序执行比较，遇到大于自己的就停下并在退出循环后插入
-                */
+                 */
                 index++;
             }
             levelDefinedList.add(level);
-            tiers.add(index, tier);
+            loadedTiers.add(index, tier);
         }
+        Map<String, Integer> loadedLevelCacheMap = new HashMap<>();
+        Map<String, Tier> loadedTierCacheMap = new HashMap<>();
+        Set<String> cachedPlayerNames = new HashSet<>();
+        cachedPlayerNames.addAll(levelCacheMap.keySet());
+        cachedPlayerNames.addAll(tierCacheMap.keySet());
+        if (DuelTimePlugin.getInstance().getCacheManager() != null) {
+            for (String playerName : cachedPlayerNames) {
+                double exp = DuelTimePlugin.getInstance().getCacheManager().getPlayerDataCache().get(playerName).getExp();
+                int level = calculateLevel(exp, loadedTiers);
+                loadedLevelCacheMap.put(playerName, level);
+                loadedTierCacheMap.put(playerName, calculateTier(level, loadedTiers));
+            }
+        }
+        tiers.clear();
+        tiers.addAll(loadedTiers);
+        levelCacheMap.clear();
+        levelCacheMap.putAll(loadedLevelCacheMap);
+        tierCacheMap.clear();
+        tierCacheMap.putAll(loadedTierCacheMap);
     }
 }

@@ -34,6 +34,9 @@ public class CommandHandler {
         commands.add(new CMDStop());
         commands.add(new CMDClick());
         PluginCommand pluginCommand = Bukkit.getPluginCommand("dueltime");
+        if (pluginCommand == null) {
+            throw new IllegalStateException("Command dueltime is not defined in plugin.yml");
+        }
         pluginCommand.setExecutor(new CommandExecutor(commands));
     }
 

@@ -170,7 +170,7 @@ public class ClassicArenaListener implements Listener {
                 }
             } else {
                 ClassicGamerData gamerData = ((ClassicGamerData) arena.getGamerData(player.getName()));
-                if (!UtilGeometry.inArena(event.getTo(), arena)) {
+                if (event.getTo() == null || !UtilGeometry.inArena(event.getTo(), arena)) {
                     player.teleport(gamerData.getRecentLocation());
                 } else {
                     gamerData.updateRecentLocation(player.getLocation());
@@ -185,7 +185,7 @@ public class ClassicArenaListener implements Listener {
             Location spectateZoneD1 = (Location) spectateFunctionData[0];
             Location spectateZoneD2 = (Location) spectateFunctionData[1];
             ClassicSpectatorData spectatorData = (ClassicSpectatorData) baseArena.getSpector(player.getName());
-            if (!UtilGeometry.inZone(event.getTo(), spectateZoneD1, spectateZoneD2)) {
+            if (event.getTo() == null || !UtilGeometry.inZone(event.getTo(), spectateZoneD1, spectateZoneD2)) {
                 player.teleport(spectatorData.getRecentLocation());
                 MsgBuilder.sendActionBar(Msg.ARENA_TYPE_CLASSIC_FUNCTION_SPECTATE_SPECTATOR_MOVE_OUT_ZONE, player, true);
             } else {

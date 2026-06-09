@@ -39,6 +39,9 @@ public class BaseArenaListener implements Listener {
         Player player = event.getPlayer();
         if (player.hasPermission(CommandPermission.ADMIN)) return;
         Location to = event.getTo();
+        if (to == null) {
+            return;
+        }
         BaseArena arena = UtilGeometry.getArena(to);
         if (arena != null) {
             if (arena.getState() == BaseArena.State.WAITING || arena.getState() == BaseArena.State.DISABLED) {
@@ -67,6 +70,9 @@ public class BaseArenaListener implements Listener {
         Player player = event.getPlayer();
         if (player.hasPermission(CommandPermission.ADMIN)) return;
         Location to = event.getTo();
+        if (to == null) {
+            return;
+        }
         BaseArena arena = UtilGeometry.getArena(to);
         if (arena != null) {
             if (arena.getState() == BaseArena.State.WAITING || arena.getState() == BaseArena.State.DISABLED) {

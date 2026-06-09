@@ -38,7 +38,7 @@ public class PlayerDataCache {
     }
 
     public void reload() {
-        playerDataMap.clear();
+        Map<String, PlayerData> loadedPlayerDataMap = new HashMap<>();
         SqlSessionFactory sqlSessionFactory = DuelTimePlugin.getInstance().getMyBatisManager().getFactory(this.getClass());
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             PlayerDataMapper mapper = sqlSession.getMapper(PlayerDataMapper.class);
@@ -50,8 +50,12 @@ public class PlayerDataCache {
                         playerDataInDatabase != null ?
                                 playerDataInDatabase :
                                 new PlayerData(playerName, 0, 0, null, 0, 0, 0, 0, 0, 0);
-                playerDataMap.put(playerName, playerData);
-                DuelTimePlugin.getInstance().getLevelManager().load(playerName, playerData.getExp());
+                loadedPlayerDataMap.put(playerName, playerData);
+            }
+            playerDataMap.clear();
+            playerDataMap.putAll(loadedPlayerDataMap);
+            for (Map.Entry<String, PlayerData> entry : loadedPlayerDataMap.entrySet()) {
+                DuelTimePlugin.getInstance().getLevelManager().load(entry.getKey(), entry.getValue().getExp());
             }
             Bukkit.getServer().getPluginManager().callEvent(new CacheInitializedEvent(this.getClass()));
         }

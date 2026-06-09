@@ -48,7 +48,11 @@ public class MsgManager {
                 DuelTimePlugin.getInstance().saveResource("languages/" + fileName, false);
             }
         } else {
-            for (String fileName : targetLanguageFolder.list()) {
+            String[] installedFileNames = targetLanguageFolder.list();
+            if (installedFileNames == null) {
+                return;
+            }
+            for (String fileName : installedFileNames) {
                 if (!Arrays.asList(presetFileNames).contains(fileName)) {
                     continue;
                 }
@@ -81,12 +85,16 @@ public class MsgManager {
      * （重新）加载语言文件到缓存中
      */
     public void reload() {
-        File languageFolder = new File("plugins/DuelTime/languages");
+        File languageFolder = new File(DuelTimePlugin.getInstance().getDataFolder(), "languages");
         if (!languageFolder.exists()) {
             return;
         }
         languageYamlFileMap.clear();
-        for (File installedLanguageFile : languageFolder.listFiles()) {
+        File[] installedLanguageFiles = languageFolder.listFiles();
+        if (installedLanguageFiles == null) {
+            return;
+        }
+        for (File installedLanguageFile : installedLanguageFiles) {
             String fileName = installedLanguageFile.getName();
             if (!fileName.endsWith(".yml") && !fileName.endsWith(".yaml")) {
                 continue;
@@ -96,5 +104,4 @@ public class MsgManager {
         }
     }
 }
-
 
