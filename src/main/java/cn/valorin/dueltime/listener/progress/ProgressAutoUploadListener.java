@@ -188,7 +188,6 @@ public class ProgressAutoUploadListener implements Listener {
             return;
         }
         //记得补充忽略副手点击的代码
-        event.setCancelled(true);
         Action action = event.getAction();
         Location location;
         if (step.hasAutoUploadTags(Step.AutoUploadTag.LOCATION_CONDITION_CLICK_AIR)) {
@@ -202,6 +201,7 @@ public class ProgressAutoUploadListener implements Listener {
             }
             location = event.getClickedBlock().getLocation();
         }
+        event.setCancelled(true);
         if (step.hasAutoUploadTags(Step.AutoUploadTag.LOCATION_CONDITION_THE_SAME_WORLD)) {
             int finishedStepNumber = progress.getFinishedStep();
             if (finishedStepNumber > 0) {

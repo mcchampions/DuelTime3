@@ -129,6 +129,8 @@ public class ArenaManager {
             for (BaseGamerData gamerData : arena.getGamerDataList()) {
                 removeGamerFromMap(gamerData.getPlayerName());
             }
+            // 兜底清理：移除所有指向该竞技场的残留映射（如 join() 等途径产生的）
+            gamerArenaMap.values().removeIf(id::equals);
             arena.end();
             updateStartInventory();
             Bukkit.getServer().getPluginManager().callEvent(new ArenaEndEvent(arena));
@@ -141,18 +143,18 @@ public class ArenaManager {
         for (BaseGamerData gamerData : arena.getGamerDataList()) {
             removeGamerFromMap(gamerData.getPlayerName());
         }
+        // 兜底清理：移除所有指向该竞技场的残留映射
+        gamerArenaMap.values().removeIf(id::equals);
         updateStartInventory();
         Bukkit.getServer().getPluginManager().callEvent(new ArenaStopEvent(arena, reason));
     }
 
-    //经由本管理器来整合并调用玩家中途加入的方法，这么做会事先发布玩家加入的的事件，同时顺带载入玩家-竞技场映射（这些工作可能会被不走这个方法的开发者疏漏）
+    //经由本管理器来整合并调用玩家中途加入的方法，这么做会事先发布玩家加入的的事件
+    //实际的加入逻辑（如添加GamerData、传送等）由对应竞技场类型的监听器处理
     public void join(Player player, String id, ArenaTryToJoinEvent.Way way) {
         BaseArena arena = get(id);
         ArenaTryToJoinEvent event = new ArenaTryToJoinEvent(player, arena, way);
         Bukkit.getServer().getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            addGamerToMap(player, id);
-        }
         updateStartInventory();
     }
 
