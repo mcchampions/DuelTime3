@@ -42,7 +42,7 @@ public class UtilItemBuilder {
     }
 
     public UtilItemBuilder setLight() {
-        itemMeta.addEnchant(Enchantment.LUCK, 1, true);
+        itemMeta.addEnchant(Enchantment.FORTUNE, 1, true);
         itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         return this;
     }

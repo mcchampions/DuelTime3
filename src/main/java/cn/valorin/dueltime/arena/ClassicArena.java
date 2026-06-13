@@ -232,7 +232,7 @@ public class ClassicArena extends BaseArena {
                         expChange = cfgManager.getArenaClassicRewardWinExp();
                         //赢家处放烟花
                         Firework firework = (Firework) player.getWorld().spawnEntity(player.getLocation(),
-                                EntityType.FIREWORK);
+                                EntityType.FIREWORK_ROCKET);
                         FireworkMeta fm = firework.getFireworkMeta();
                         fm.addEffect(FireworkEffect.builder()
                                 .with(FireworkEffect.Type.BALL_LARGE)

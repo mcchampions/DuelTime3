@@ -10,8 +10,6 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static cn.valorin.dueltime.viaversion.ViaVersion.TitleType.*;
@@ -21,7 +19,7 @@ public class ViaVersion {
     private static Class<?> getNmsClass(String name)
             throws ClassNotFoundException {
         if (DuelTimePlugin.serverVersionInt >= 17) {
-            return Class.forName("net.minecraft.server." + name);
+            return Class.forName("net.minecraft." + name);
         } else {
             return Class.forName("net.minecraft.server." + DuelTimePlugin.serverVersion + "." + name);
         }
@@ -29,6 +27,9 @@ public class ViaVersion {
 
     private static Class<?> getCbClass(String name)
             throws ClassNotFoundException {
+        if (DuelTimePlugin.serverVersionInt >= 21) {
+            return Class.forName("org.bukkit.craftbukkit." + name);
+        }
         return Class.forName("org.bukkit.craftbukkit."
                 + DuelTimePlugin.serverVersion + "." + name);
     }
@@ -174,12 +175,9 @@ public class ViaVersion {
         try {
             Object packet;
             if (DuelTimePlugin.serverVersionInt >= 17) {
-                //还没研究清楚1.17及以上的发包形式，就暂时不采取不发包
-                Class<?> dustOptionsClass = Class.forName("org.bukkit.Particle$DustOptions");
-                Constructor<?> dustOptionsConstructor = dustOptionsClass.getConstructor(Color.class, float.class);
-                Object dustOptions = dustOptionsConstructor.newInstance(Color.fromRGB((int) colorR, (int) colorG, (int) colorB), 1);
-                Method spawnParticleMethod = viewer.getWorld().getClass().getMethod("spawnParticle", Particle.class, Location.class, int.class, double.class, double.class, double.class, Object.class);
-                spawnParticleMethod.invoke(viewer.getWorld(), Particle.REDSTONE, location, 0, 0, 0, 0, dustOptions);
+                Particle.DustOptions dustOptions = new Particle.DustOptions(
+                        Color.fromRGB((int) colorR, (int) colorG, (int) colorB), 1);
+                viewer.getWorld().spawnParticle(Particle.DUST, location, 0, 0, 0, 0, dustOptions);
             } else {
                 Class<?> packetClass = getNmsClass("Packet");
                 try {
@@ -294,51 +292,17 @@ public class ViaVersion {
     }
 
     public static Sound getSound(String... soundNames) {
-        try {
-            Class<?> soundClass = Class.forName("org.bukkit.Sound");
-            Enum<?>[] enumConstants = (Enum<?>[]) soundClass.getEnumConstants();
-            Sound enumACTIONBAR = null;
-            for (String soundName : soundNames) {
-                for (Enum<?> enum1 : enumConstants) {
-                    if (enum1.name().equals(soundName)) {
-                        enumACTIONBAR = (Sound) enum1;
-                        break;
-                    }
-                }
+        for (String soundName : soundNames) {
+            try {
+                return Sound.valueOf(soundName);
+            } catch (IllegalArgumentException ignored) {
             }
-            return enumACTIONBAR;
-        } catch (ClassNotFoundException ignored) {
         }
         return null;
     }
 
 
-    /**
-     * 以1.7及以后的API，方法Bukkit.getOnlinePlayers()的返回类型与之前的版本不同
-     *
-     * @return 玩家集合
-     */
     public static List<Player> getOnlinePlayers() {
-        List<Player> players = null;
-        try {
-            Class<?> clazz = Class.forName("org.bukkit.Bukkit");
-            Method method = clazz.getMethod("getOnlinePlayers");
-            if (method.getReturnType().equals(Collection.class)) {
-                Collection<?> rawPlayers = (Collection<?>) (method
-                        .invoke(Bukkit.getServer()));
-                players = new ArrayList<>();
-                for (Object o : rawPlayers) {
-                    if (o instanceof Player) {
-                        players.add((Player) o);
-                    }
-                }
-            } else {
-                players = Arrays.asList((Player[]) method.invoke(Bukkit
-                        .getServer()));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return players;
+        return new ArrayList<>(Bukkit.getOnlinePlayers());
     }
 }
