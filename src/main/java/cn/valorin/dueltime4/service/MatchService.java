@@ -49,6 +49,7 @@ public class MatchService {
             gamers.add(g);
             arena.addGamer(g);
             arenaService.addGamerMapping(p.getName(), arenaId);
+            arenaService.removeFromWaiting(p); // Clean up waiting queue entry
             Bukkit.getPluginManager().callEvent(new PlayerJoinArenaEvent(p, arena));
         }
 

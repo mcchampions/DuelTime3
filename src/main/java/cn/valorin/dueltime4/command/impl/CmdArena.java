@@ -86,6 +86,10 @@ public class CmdArena extends SubCommand {
                     return;
                 }
                 boolean enabling = a.getState() == ArenaState.DISABLED;
+                if (!enabling && a.getState() != ArenaState.WAITING && a.getState() != ArenaState.DISABLED) {
+                    sender.sendMessage("Cannot disable arena while a match is in progress.");
+                    return;
+                }
                 arenaService.setArenaEnabled(args[1], enabling);
                 sender.sendMessage("Arena " + args[1] + " " + (enabling ? "enabled" : "disabled"));
             }

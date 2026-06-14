@@ -51,9 +51,9 @@ public class ShopGui extends PagedGui {
     @Override
     public void onClick(int slot, InventoryClickEvent event) {
         super.onClick(slot, event);
-        if (slot == 45 || slot == 53) return; // Navigation slots
+        if (slot < 0 || slot >= PAGE_SIZE) return; // Not an item slot
         int index = page * PAGE_SIZE + slot;
-        if (index >= 0 && index < items.size()) {
+        if (index < items.size()) {
             String itemId = (String) items.get(index).get("id");
             boolean success = shopService.buy(player, itemId);
             if (success) player.sendMessage("§aPurchased!");

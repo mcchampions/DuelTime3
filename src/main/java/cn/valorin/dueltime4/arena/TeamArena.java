@@ -45,6 +45,12 @@ public class TeamArena extends Arena {
     }
 
     @Override
+    public void clearGamers() {
+        playerTeam.clear();
+        super.clearGamers();
+    }
+
+    @Override
     public boolean contains(Location loc) {
         // Team arenas use two spawn points as region corners
         if (team1Spawn == null || team2Spawn == null) return false;

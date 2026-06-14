@@ -69,7 +69,7 @@ public class FFAArena extends Arena {
         Map<String, Object> result = new HashMap<>();
         long aliveCount = gamers.stream().filter(g -> !g.isDead()).count();
 
-        if (aliveCount <= 1) {
+        if (aliveCount == 1) {
             result.put("reason", "CLEAR");
             gamers.stream().filter(g -> !g.isDead()).findFirst().ifPresent(w -> result.put("winner", w));
         } else {

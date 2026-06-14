@@ -33,6 +33,7 @@ public final class DuelTimePlugin extends JavaPlugin {
     private BlacklistService blacklistService;
     private RequestService requestService;
     private MigrationService migrationService;
+    private DuelTimePlaceholderExpansion placeholderExpansion;
 
     @Override
     public void onEnable() {
@@ -112,7 +113,8 @@ public final class DuelTimePlugin extends JavaPlugin {
 
         // 9. Register PlaceholderAPI expansion if available
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new DuelTimePlaceholderExpansion(playerService).register();
+            placeholderExpansion = new DuelTimePlaceholderExpansion(playerService);
+            placeholderExpansion.register();
             getLogger().info("PlaceholderAPI expansion registered.");
         }
 
@@ -125,7 +127,9 @@ public final class DuelTimePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (placeholderExpansion != null) placeholderExpansion.unregister();
         if (matchService != null) matchService.shutdown();
+        if (rankingService != null) rankingService.cancelAutoRefresh();
         if (databaseManager != null) databaseManager.close();
     }
 

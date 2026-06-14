@@ -10,7 +10,7 @@ public enum ArenaState {
     public boolean canTransitionTo(ArenaState next) {
         return switch (this) {
             case WAITING   -> next == STARTING || next == DISABLED;
-            case STARTING  -> next == IN_PROGRESS;
+            case STARTING  -> next == IN_PROGRESS || next == ENDING;
             case IN_PROGRESS -> next == ENDING;
             case ENDING    -> next == WAITING || next == DISABLED;
             case DISABLED  -> next == WAITING;
