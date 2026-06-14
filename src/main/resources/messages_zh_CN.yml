@@ -1,0 +1,32 @@
+arena:
+  wait-start: "&aYou joined %arena% waiting queue"
+  wait-switch: "&eYou switched to %arena%"
+  protection:
+    walk-in: "&c%arena% is not accessible right now"
+    break: "&cCannot break in %arena%"
+    place: "&cCannot place in %arena%"
+    interact: "&cCannot interact in %arena%"
+    attack: "&cCannot attack in %arena%"
+classic:
+  start-title: "&6Duel!"
+  start-subtitle: "&eGet ready"
+  win-title: "&6&lVictory!"
+  win-subtitle: "&eWell played"
+  end-broadcast: "&e%winner% &adefeated &e%loser% &a!"
+  end-broadcast-draw: "&e%p1% &7vs &e%p2% &7— Draw!"
+  earn-point: "&a+%points% points (%total% total)"
+command:
+  no-permission: "&cNo permission."
+  player-only: "&cThis command is for players only."
+  unknown: "&cUnknown command. Use /dt help."
+  reloaded: "&aDuelTime4 reloaded."
+  migrate-running: "&eMigration in progress..."
+  migrate-done: "&aMigration complete!"
+  lobby-set: "&aLobby location set."
+  blacklist-added: "&a%player% added to blacklist."
+  blacklist-removed: "&a%player% removed from blacklist."
+  lang-changed: "&aLanguage set to %lang%."
+shop:
+  title: "&6Points Shop"
+  purchased: "&aItem purchased!"
+  not-enough: "&cNot enough points."
