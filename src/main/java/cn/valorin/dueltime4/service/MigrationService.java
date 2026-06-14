@@ -93,6 +93,7 @@ public class MigrationService {
             });
 
             config.set("migration.enabled", false);
+            config.reload();
             log.info("[DuelTime4] Migration done: " + arenaCount + " arenas, "
                 + playerCount + " players, " + recordCount + " records, "
                 + shopItemCount + " shop items");
