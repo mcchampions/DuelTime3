@@ -17,8 +17,7 @@ public class DatabaseManager {
 
     public DatabaseManager(Config config) {
         this.config = config;
-        String type = config.getString("database.type", "sqlite");
-        this.sqlite = "sqlite".equalsIgnoreCase(type);
+        this.sqlite = "sqlite".equalsIgnoreCase(config.getDbType());
 
         HikariConfig hikariConfig = new HikariConfig();
         if (sqlite) {
@@ -26,14 +25,10 @@ public class DatabaseManager {
             hikariConfig.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
             hikariConfig.setDriverClassName("org.sqlite.JDBC");
         } else {
-            String host = config.getString("database.mysql.host", "localhost");
-            int port = config.getInt("database.mysql.port", 3306);
-            String db = config.getString("database.mysql.database", "dueltime");
-            String user = config.getString("database.mysql.username", "root");
-            String pass = config.getString("database.mysql.password", "");
-            hikariConfig.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&allowPublicKeyRetrieval=true");
-            hikariConfig.setUsername(user);
-            hikariConfig.setPassword(pass);
+            hikariConfig.setJdbcUrl("jdbc:mysql://" + config.getDbMysqlHost() + ":" + config.getDbMysqlPort()
+                + "/" + config.getDbMysqlDatabase() + "?useSSL=false&allowPublicKeyRetrieval=true");
+            hikariConfig.setUsername(config.getDbMysqlUsername());
+            hikariConfig.setPassword(config.getDbMysqlPassword());
             hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
         }
         hikariConfig.setMaximumPoolSize(5);

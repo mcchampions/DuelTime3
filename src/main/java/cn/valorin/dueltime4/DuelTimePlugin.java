@@ -72,7 +72,7 @@ public final class DuelTimePlugin extends JavaPlugin {
             playerRepository, recordRepository, locationRepository, blacklistRepository);
 
         // 5. Migration (if enabled in config) — runs before arena load so migrated arenas are picked up
-        if (config.getBoolean("migration.enabled", false)) {
+        if (config.getMigrationEnabled()) {
             migrationService.run();
             // Reload components that depend on migrated config/db values
             messages.reload();

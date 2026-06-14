@@ -52,22 +52,19 @@ public class MigrationService {
 
     public void run() {
         log.info("[DuelTime4] Starting migration from DuelTime3...");
-        String oldType = config.getString("migration.old-database.type", "sqlite");
+        String oldType = config.getMigrationOldDbType();
         String jdbcUrl;
         String user = null, pass = null;
 
         if ("mysql".equalsIgnoreCase(oldType)) {
-            String host = config.getString("migration.old-database.mysql.host", "localhost");
-            int port = config.getInt("migration.old-database.mysql.port", 3306);
-            String dbName = config.getString("migration.old-database.mysql.database", "dueltime");
-            user = config.getString("migration.old-database.mysql.username", "root");
-            pass = config.getString("migration.old-database.mysql.password", "");
-            jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
+            jdbcUrl = "jdbc:mysql://" + config.getMigrationOldDbMysqlHost() + ":" + config.getMigrationOldDbMysqlPort()
+                + "/" + config.getMigrationOldDbMysqlDatabase() + "?useSSL=false";
+            user = config.getMigrationOldDbMysqlUsername();
+            pass = config.getMigrationOldDbMysqlPassword();
         } else {
-            String path = config.getString("migration.old-database.sqlite.path", "plugins/DuelTime/sqlite.db");
+            String path = config.getMigrationOldDbSqlitePath();
             File f = new File(path);
             if (!f.isAbsolute()) {
-                // Resolve relative to server root (plugins/ folder parent)
                 f = new File(config.getPlugin().getDataFolder().getParentFile().getParentFile(), path);
             }
             jdbcUrl = "jdbc:sqlite:" + f.getAbsolutePath();
@@ -244,7 +241,7 @@ public class MigrationService {
     // ─── Config migration ───
 
     private void migrateConfigValues() {
-        String folder = config.getString("migration.old-plugin-folder", "plugins/DuelTime");
+        String folder = config.getMigrationOldPluginFolder();
         File oldConfigFile = new File(folder, "config.yml");
         if (!oldConfigFile.isAbsolute()) {
             oldConfigFile = new File(config.getPlugin().getDataFolder().getParentFile().getParentFile(), folder + "/config.yml");
