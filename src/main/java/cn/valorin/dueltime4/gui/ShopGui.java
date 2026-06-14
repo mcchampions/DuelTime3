@@ -1,12 +1,13 @@
 package cn.valorin.dueltime4.gui;
 
+import cn.valorin.dueltime4.DuelTimePlugin;
 import cn.valorin.dueltime4.service.ShopService;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import net.kyori.adventure.text.Component;
 
 import java.util.*;
 
@@ -17,7 +18,7 @@ public class ShopGui extends PagedGui {
 
     public ShopGui(Player player) {
         super(player, "Points Shop");
-        this.shopService = cn.valorin.dueltime4.DuelTimePlugin.getInstance().getShopService();
+        this.shopService = DuelTimePlugin.getInstance().getShopService();
         this.items = shopService.getItems();
     }
 
@@ -28,7 +29,13 @@ public class ShopGui extends PagedGui {
         int end = Math.min(start + PAGE_SIZE, items.size());
         for (int i = start; i < end; i++) {
             Map<?, ?> shopItem = items.get(i);
-            ItemStack stack = ShopService.buildItem(shopItem);
+            Object itemData = shopItem.get("item");
+            ItemStack stack;
+            if (itemData instanceof ItemStack s) {
+                stack = s.clone();
+            } else {
+                stack = new ItemStack(Material.STONE);
+            }
             ItemMeta meta = stack.getItemMeta();
             List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
             lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));

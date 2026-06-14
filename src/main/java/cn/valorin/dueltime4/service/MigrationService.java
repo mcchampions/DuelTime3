@@ -12,7 +12,6 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -94,7 +93,6 @@ public class MigrationService {
             });
 
             config.set("migration.enabled", false);
-            config.reload();
             log.info("[DuelTime4] Migration done: " + arenaCount + " arenas, "
                 + playerCount + " players, " + recordCount + " records, "
                 + shopItemCount + " shop items");
@@ -212,29 +210,15 @@ public class MigrationService {
                 }
             } catch (Exception ignored) {}
 
-            String material = "STONE";
-            int amount = 1;
-            String displayName = null;
-            List<String> lore = new ArrayList<>();
+            ItemStack stack = new ItemStack(Material.STONE);
             try {
                 String base64 = rs.getString("item_stack");
                 if (base64 != null && !base64.isEmpty()) {
                     byte[] data = Base64.getDecoder().decode(base64);
                     try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
                         Object obj = ois.readObject();
-                        if (obj instanceof ItemStack stack && stack.getType() != Material.AIR) {
-                            material = stack.getType().name();
-                            amount = stack.getAmount();
-                            if (stack.hasItemMeta()) {
-                                var meta = stack.getItemMeta();
-                                displayName = LegacyComponentSerializer.legacyAmpersand().serialize(meta.displayName());
-                                var lores = meta.lore();
-                                if (lores != null && !lores.isEmpty()) {
-                                    for (var c : lores) {
-                                        lore.add(LegacyComponentSerializer.legacyAmpersand().serialize(c));
-                                    }
-                                }
-                            }
+                        if (obj instanceof ItemStack deserialized && deserialized.getType() != Material.AIR) {
+                            stack = deserialized;
                         }
                     }
                 }
@@ -243,10 +227,7 @@ public class MigrationService {
             }
 
             item.put("id", itemId);
-            item.put("material", material);
-            item.put("amount", amount);
-            if (displayName != null) item.put("name", displayName);
-            item.put("lore", lore);
+            item.put("item", stack); // ItemStack directly — YamlConfiguration handles serialization
             item.put("cost", cost);
             item.put("commands", commands);
             items.add(item);

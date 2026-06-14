@@ -76,7 +76,22 @@ record:
   print-cost: 1
 
 shop:
-  items: []
+  items:
+    - id: "diamond_sword"
+      item:
+        ==: org.bukkit.inventory.ItemStack
+        v: 4671
+        type: minecraft:diamond_sword
+      cost: 50
+      commands: []
+    - id: "exp_bottle"
+      item:
+        ==: org.bukkit.inventory.ItemStack
+        v: 4671
+        type: minecraft:experience_bottle
+        amount: 16
+      cost: 20
+      commands: []
 
 migration:
   enabled: true
