@@ -32,10 +32,11 @@ public class CmdJoin extends SubCommand {
             player.sendMessage("You are blacklisted and cannot join arenas.");
             return;
         }
+        String arenaId = args[0];
         ArenaService arenaService = DuelTimePlugin.getInstance().getArenaService();
-        Arena arena = arenaService.get(args[0]);
+        Arena arena = arenaService.get(arenaId);
         if (arena == null) {
-            player.sendMessage("Arena not found: " + args[0]);
+            player.sendMessage("Arena not found: " + arenaId);
             return;
         }
         if (arena.getState() != ArenaState.WAITING) {
