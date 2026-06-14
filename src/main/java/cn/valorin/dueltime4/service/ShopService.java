@@ -4,6 +4,7 @@ import cn.valorin.dueltime4.config.Config;
 import cn.valorin.dueltime4.player.PlayerProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
@@ -23,6 +24,7 @@ public class ShopService {
         return getItems().stream().filter(item -> id.equals(item.get("id"))).findFirst().orElse(null);
     }
 
+    @SuppressWarnings("unchecked")
     public boolean buy(Player player, String itemId) {
         Map<?, ?> item = findItem(itemId);
         if (item == null) return false;
@@ -37,10 +39,21 @@ public class ShopService {
         profile.setPoint(profile.getPoint() - cost);
         playerService.save(profile);
 
+        // Give the item
+        Object itemData = item.get("item");
+        if (itemData instanceof Map<?, ?> itemMap) {
+            ItemStack stack = ItemStack.deserialize((Map<String, Object>) itemMap);
+            Map<Integer, ItemStack> leftover = player.getInventory().addItem(stack);
+            for (ItemStack drop : leftover.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), drop);
+            }
+        }
+
+        // Run commands
         Object commandsObj = item.get("commands");
         if (commandsObj instanceof List<?> list) {
             for (Object obj : list) {
-                if (obj instanceof String cmd) {
+                if (obj instanceof String cmd && !cmd.isEmpty()) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.getName()));
                 }
             }

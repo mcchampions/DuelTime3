@@ -23,20 +23,25 @@ public class ShopGui extends PagedGui {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected List<ItemStack> getPageItems(int page) {
         List<ItemStack> result = new ArrayList<>();
         int start = page * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, items.size());
         for (int i = start; i < end; i++) {
-            Map<?, ?> item = items.get(i);
-            Material mat = Material.valueOf((String) item.get("material"));
-            ItemStack stack = new ItemStack(mat);
+            Map<?, ?> shopItem = items.get(i);
+            ItemStack stack;
+            Object itemData = shopItem.get("item");
+            if (itemData instanceof Map<?, ?> itemMap) {
+                stack = ItemStack.deserialize((Map<String, Object>) itemMap);
+            } else {
+                stack = new ItemStack(Material.STONE);
+            }
             ItemMeta meta = stack.getItemMeta();
-            meta.displayName(Component.text((String) item.get("name")));
-            List<String> lore = new ArrayList<>((List<String>) item.get("lore"));
-            lore.add("§7Cost: §e" + item.get("cost") + " points");
-            lore.add("§aClick to buy!");
-            meta.lore(lore.stream().map(Component::text).toList());
+            List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+            lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));
+            lore.add(Component.text("§aClick to buy!"));
+            meta.lore(lore);
             stack.setItemMeta(meta);
             result.add(stack);
         }
@@ -51,13 +56,13 @@ public class ShopGui extends PagedGui {
     @Override
     public void onClick(int slot, InventoryClickEvent event) {
         super.onClick(slot, event);
-        if (slot < 0 || slot >= PAGE_SIZE) return; // Not an item slot
+        if (slot < 0 || slot >= PAGE_SIZE) return;
         int index = page * PAGE_SIZE + slot;
         if (index < items.size()) {
             String itemId = (String) items.get(index).get("id");
             boolean success = shopService.buy(player, itemId);
             if (success) player.sendMessage("§aPurchased!");
-            else player.sendMessage("§cNot enough points!");
+            else player.sendMessage("§cNot enough points or inventory full!");
             player.closeInventory();
         }
     }

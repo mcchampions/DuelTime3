@@ -20,8 +20,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-
 public class MigrationService {
 
     private final DatabaseManager db;
@@ -200,41 +198,7 @@ public class MigrationService {
             int cost = 1;
             try { cost = (int) rs.getDouble("point"); } catch (Exception ignored) {}
 
-            // Deserialize the Java-serialized ItemStack to get material/name/lore
-            String material = "STONE";
-            String displayName = null;
-            List<String> lore = new ArrayList<>();
             List<String> commands = new ArrayList<>();
-            var serializer = LegacyComponentSerializer.legacyAmpersand();
-
-            try {
-                String base64 = rs.getString("item_stack");
-                if (base64 != null && !base64.isEmpty()) {
-                    byte[] data = Base64.getDecoder().decode(base64);
-                    try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
-                        Object obj = ois.readObject();
-                        if (obj instanceof ItemStack stack && stack.getType() != Material.AIR) {
-                            material = stack.getType().name();
-                            if (stack.hasItemMeta()) {
-                                var meta = stack.getItemMeta();
-                                displayName = serializer.serialize(meta.displayName());
-                                if (meta.hasLore()) {
-                                    var lores = meta.lore();
-                                    if (lores != null && !lores.isEmpty()) {
-                                        for (var c : lores) {
-                                            lore.add(serializer.serialize(c));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warning("Failed to deserialize shop item " + itemId + ": " + e.getMessage());
-            }
-
-            // Try to read commands from the commands column
             try {
                 String cmds = rs.getString("commands");
                 if (cmds != null && !cmds.isEmpty()) {
@@ -242,11 +206,26 @@ public class MigrationService {
                 }
             } catch (Exception ignored) {}
 
+            // Deserialize and re-serialize ItemStack to YAML-compatible map
+            Map<String, Object> serializedItem = new LinkedHashMap<>();
+            try {
+                String base64 = rs.getString("item_stack");
+                if (base64 != null && !base64.isEmpty()) {
+                    byte[] data = Base64.getDecoder().decode(base64);
+                    try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
+                        Object obj = ois.readObject();
+                        if (obj instanceof ItemStack stack && stack.getType() != Material.AIR) {
+                            serializedItem = new LinkedHashMap<>(stack.serialize());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warning("Failed to deserialize shop item " + itemId + ": " + e.getMessage());
+            }
+
             item.put("id", itemId);
-            item.put("material", material);
-            item.put("name", displayName != null ? displayName : material);
+            item.put("item", serializedItem);
             item.put("cost", cost);
-            item.put("lore", lore);
             item.put("commands", commands);
             items.add(item);
             shopItemCount++;
