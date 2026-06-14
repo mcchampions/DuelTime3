@@ -122,7 +122,7 @@ public final class DuelTimePlugin extends JavaPlugin {
         }
 
         // 10. Start ranking auto-refresh timer
-        int interval = config.getInt("ranking.refresh-seconds", 30);
+        int interval = config.getRankingRefreshSeconds();
         rankingService.startAutoRefresh(interval);
 
         getLogger().info("DuelTime4 v" + getDescription().getVersion() + " enabled");
