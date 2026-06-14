@@ -71,13 +71,16 @@ public final class DuelTimePlugin extends JavaPlugin {
         migrationService = new MigrationService(databaseManager, config, arenaRepository,
             playerRepository, recordRepository, locationRepository, blacklistRepository);
 
-        // 5. Load arenas from DB
-        arenaService.loadAll();
-
-        // 6. Migration (if enabled in config)
+        // 5. Migration (if enabled in config) — runs before arena load so migrated arenas are picked up
         if (config.getBoolean("migration.enabled", false)) {
             migrationService.run();
+            // Reload components that depend on migrated config/db values
+            messages.reload();
+            config.reload();
         }
+
+        // 6. Load arenas from DB (after migration)
+        arenaService.loadAll();
 
         // 7. Register commands
         CommandManager cmdManager = new CommandManager();

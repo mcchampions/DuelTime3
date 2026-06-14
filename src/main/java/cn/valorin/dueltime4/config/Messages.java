@@ -24,7 +24,7 @@ public class Messages {
     }
 
     public void load() {
-        String lang = config.getString("core.language", "zh_CN");
+        String lang = config.getLanguage();
         File langFile = new File(plugin.getDataFolder(), "messages_" + lang + ".yml");
         if (!langFile.exists()) {
             plugin.saveResource("messages_zh_CN.yml", false);
@@ -43,7 +43,7 @@ public class Messages {
 
     public String get(String path, Map<String, String> placeholders) {
         String msg = getRaw(path);
-        String prefix = config.getString("core.prefix", "");
+        String prefix = config.getPrefix();
         msg = msg.replace("%prefix%", prefix);
         if (placeholders != null) {
             for (var entry : placeholders.entrySet()) {
