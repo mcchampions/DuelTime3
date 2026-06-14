@@ -1,104 +1,107 @@
-Message:
+core:
   prefix: "&7&l[&bDuelTime&7&l] "
-  default-language: "简体中文"
-Database:
-  url: jdbc:mysql://localhost:3306/test?useSSL=false
-  username: root
-  password: 1234
-  type:
-    arena: "sqlite"
-    location: "sqlite"
-    shop: "sqlite"
-    record: "sqlite"
-    player-data: "sqlite"
-    blacklist: "sqlite"
-Arena:
-  classic:
-    reward:
-      win-exp: 30
-      win-point: 1
-      lose-exp-rate: 0.3
-    auto-respawn:
-      enabled: true
-      code: "SPIGOT"
-    delayed-back:
-      enabled: true
-      time: 5
-Record:
-  show:
-    enabled: true
-    cooldown: 10
-  print:
-    enabled: true
-    cost: 1
-Ranking:
-  auto-refresh-interval: 30
+  language: "zh_CN"
+
+database:
+  type: sqlite
+  mysql:
+    host: localhost
+    port: 3306
+    database: dueltime
+    username: root
+    password: ""
+
+arena:
+  defaults:
+    classic:
+      countdown: 5
+      countdown-freeze: true
+      time-limit: 300
+      allow-spectate: true
+      show-health-bossbar: true
+      reward:
+        win-exp: 30
+        win-point: 1
+        lose-exp-rate: 0.3
+      win-streak:
+        enabled: true
+        bonus-point:
+          "2": 1
+          "3": 2
+          "5": 3
+          "10": 5
+        bonus-exp-rate:
+          "3": 0.2
+          "5": 0.5
+          "10": 1.0
+      auto-respawn: true
+      delayed-back: 5
+    team:
+      team-size: 2
+      countdown: 10
+      time-limit: 600
+    ffa:
+      min-players: 3
+      max-players: 8
+      countdown: 10
+      time-limit: 600
+
+level:
+  chat-prefix: "&f[%level%&f]"
+  tiers:
+    - {level: 0, title: "&7无段位", exp-to-next: 10}
+    - {level: 1, title: "&2青铜I", exp-to-next: 20}
+    - {level: 3, title: "&2青铜II", exp-to-next: 25}
+    - {level: 5, title: "&2青铜III", exp-to-next: 30}
+    - {level: 10, title: "&3黑铁I", exp-to-next: 35}
+    - {level: 15, title: "&3黑铁II", exp-to-next: 40}
+    - {level: 20, title: "&3黑铁III", exp-to-next: 50}
+    - {level: 25, title: "&e黄金I", exp-to-next: 60}
+    - {level: 30, title: "&e黄金II", exp-to-next: 70}
+    - {level: 35, title: "&e黄金III", exp-to-next: 80}
+    - {level: 40, title: "&b钻石I", exp-to-next: 90}
+    - {level: 45, title: "&b钻石II", exp-to-next: 100}
+    - {level: 50, title: "&b钻石III", exp-to-next: 115}
+    - {level: 55, title: "&b钻石IV", exp-to-next: 130}
+    - {level: 60, title: "&b钻石V", exp-to-next: 150}
+
+ranking:
+  refresh-seconds: 30
   hologram:
     enabled: true
-    size: 10
-    plugin: "DecentHolograms"
-Level:
-  tier:
-    showed-in-chat-box:
-      enabled: true
-      format: "&f[&r%v&f]"
-    default:
-      title: "&7无段位"
-      exp-for-level-up: 10
-    custom:
-      t1:
-        level: 1
-        title: "&2青铜I"
-        exp-for-level-up: 20
-      t2:
-        level: 3
-        title: "&2青铜II"
-        exp-for-level-up: 25
-      t3:
-        level: 5
-        title: "&2青铜III"
-        exp-for-level-up: 30
-      t4:
-        level: 10
-        title: "&3黑铁I"
-        exp-for-level-up: 35
-      t5:
-        level: 15
-        title: "&3黑铁II"
-        exp-for-level-up: 40
-      t6:
-        level: 20
-        title: "&3黑铁III"
-        exp-for-level-up: 50
-      t7:
-        level: 25
-        title: "&e黄金I"
-        exp-for-level-up: 60
-      t8:
-        level: 30
-        title: "&e黄金II"
-        exp-for-level-up: 70
-      t9:
-        level: 35
-        title: "&e黄金III"
-        exp-for-level-up: 80
-      t10:
-        level: 40
-        title: "&b钻石I"
-        exp-for-level-up: 90
-      t11:
-        level: 45
-        title: "&b钻石II"
-        exp-for-level-up: 100
-      t12:
-        level: 50
-        title: "&b钻石III"
-        exp-for-level-up: 115
-      t13:
-        level: 55
-        title: "&b钻石IV"
-        exp-for-level-up: 130
-      t14:
-        level: 60
-        title: "&b钻石V"
-        exp-for-level-up: 150
+    max-size: 10
+
+record:
+  show-cooldown: 10
+  print-cost: 1
+
+shop:
+  items:
+    - id: "diamond_sword"
+      material: DIAMOND_SWORD
+      name: "&b钻石剑"
+      lore:
+        - "&7一把锋利的钻石剑"
+      cost: 50
+      commands:
+        - "give %player% diamond_sword 1"
+    - id: "exp_bottle"
+      material: EXPERIENCE_BOTTLE
+      name: "&e经验瓶 x16"
+      cost: 20
+      commands:
+        - "give %player% experience_bottle 16"
+
+migration:
+  enabled: false
+  old-plugin-folder: "plugins/DuelTime3"
+  old-database:
+    type: sqlite
+    sqlite:
+      path: "plugins/DuelTime3/dueltime.db"
+    mysql:
+      host: localhost
+      port: 3306
+      database: dueltime
+      username: root
+      password: ""

@@ -1,10 +1,10 @@
-name: DuelTime
+name: DuelTime4
 version: '${project.version}'
-main: cn.valorin.dueltime.DuelTimePlugin
-softdepend: [ PlaceholderAPI, CMI, DecentHolograms , Multiverse-Core ]
-api-version: 1.13
+main: cn.valorin.dueltime4.DuelTimePlugin
+api-version: '1.21'
+softdepend: [PlaceholderAPI, DecentHolograms]
 commands:
   dueltime:
-    description: Help of DuelTime
+    description: DuelTime4 commands
     usage: /<command>
-    aliases: [ dt ]
+    aliases: [dt]
