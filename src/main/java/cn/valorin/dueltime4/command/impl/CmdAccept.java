@@ -27,23 +27,27 @@ public class CmdAccept extends SubCommand {
         MatchService matchService = DuelTimePlugin.getInstance().getMatchService();
 
         String senderName = args.length > 0 ? args[0] : null;
-
         if (senderName == null) {
-            // Accept the most recent request (first found)
             player.sendMessage("Please specify the player name: /dt accept <player>");
             return;
         }
 
-        Optional<RequestService.Request> request = requestService.accept(player, senderName);
-        if (request.isEmpty()) {
+        // Validate BEFORE consuming the request
+        var lookup = requestService.getRequest(senderName, player.getName());
+        if (lookup.isEmpty()) {
             player.sendMessage("No pending request from " + senderName);
             return;
         }
 
-        String arenaId = request.get().arenaId();
+        String arenaId = lookup.get().arenaId();
         Arena arena = arenaService.get(arenaId);
         if (arena == null) {
             player.sendMessage("Arena not found: " + arenaId);
+            return;
+        }
+
+        if (arenaService.getByPlayer(player) != null) {
+            player.sendMessage("You are already in a match. Use /dt quit first.");
             return;
         }
 
@@ -53,6 +57,8 @@ public class CmdAccept extends SubCommand {
             return;
         }
 
+        // Now consume the request
+        requestService.accept(player, senderName);
         matchService.startMatch(arenaId, List.of(senderPlayer, player));
     }
 }

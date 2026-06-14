@@ -3,6 +3,7 @@ package cn.valorin.dueltime4.jdbc;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -38,6 +39,7 @@ public class SqlHelper implements AutoCloseable {
 
     public <T> Optional<T> queryOne(String sql, RowMapper<T> mapper, Object... params) {
         List<T> results = query(sql, mapper, params);
+        results.removeIf(Objects::isNull);
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 

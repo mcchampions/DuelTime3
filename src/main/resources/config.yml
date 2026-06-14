@@ -77,14 +77,6 @@ record:
 
 shop:
   items:
-    - id: "diamond_sword"
-      material: DIAMOND_SWORD
-      name: "&b钻石剑"
-      lore:
-        - "&7一把锋利的钻石剑"
-      cost: 50
-      commands:
-        - "give %player% diamond_sword 1"
     - id: "exp_bottle"
       material: EXPERIENCE_BOTTLE
       name: "&e经验瓶 x16"

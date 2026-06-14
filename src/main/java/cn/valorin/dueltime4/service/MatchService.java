@@ -42,10 +42,13 @@ public class MatchService {
         Arena arena = arenaService.get(arenaId);
         if (arena == null) return;
         if (arena.getState() != ArenaState.WAITING) return;
+        if (players.size() > arena.getMaxPlayers()) return;
+        if (players.size() < arena.getMinPlayers()) return;
 
         List<Gamer> gamers = new ArrayList<>();
         for (Player p : players) {
             Gamer g = new Gamer(p);
+            if (!arena.canJoin(g)) continue; // Skip players who can't join
             gamers.add(g);
             arena.addGamer(g);
             arenaService.addGamerMapping(p.getName(), arenaId);
@@ -180,10 +183,13 @@ public class MatchService {
                 g.getHitCount() > 0 ? g.getTotalDamage() / g.getHitCount() : 0,
                 time);
 
-            // Teleport back
+            // Teleport back and restore game mode
             Location back = arenaService.getLobby();
             if (back == null) back = g.getOriginalLocation();
-            if (player.isOnline()) player.teleport(back);
+            if (player.isOnline()) {
+                player.setGameMode(g.getOriginalGameMode());
+                player.teleport(back);
+            }
 
             Bukkit.getPluginManager().callEvent(new PlayerLeaveArenaEvent(player, arena));
         }

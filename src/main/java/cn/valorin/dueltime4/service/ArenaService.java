@@ -68,12 +68,14 @@ public class ArenaService {
     }
 
     private Location parseLocation(String json, String key) {
-        String worldName = extractString(json, "world", "world");
-        double x = extractDouble(json, key + "\":{\"x\"", 0);
-        double y = extractDouble(json, key + "\":{\"y\"", 0);
-        double z = extractDouble(json, key + "\":{\"z\"", 0);
-        float yaw = (float) extractDouble(json, key + "\":{\"yaw\"", 0);
-        float pitch = (float) extractDouble(json, key + "\":{\"pitch\"", 0);
+        String obj = extractObject(json, key);
+        if (obj == null) return defaultLocation();
+        String worldName = extractFieldString(json, "world", "world");
+        double x = extractFieldDouble(obj, "x");
+        double y = extractFieldDouble(obj, "y");
+        double z = extractFieldDouble(obj, "z");
+        float yaw = (float) extractFieldDouble(obj, "yaw");
+        float pitch = (float) extractFieldDouble(obj, "pitch");
         var world = Bukkit.getWorld(worldName);
         if (world == null) world = Bukkit.getWorlds().get(0);
         return new Location(world, x, y, z, yaw, pitch);
@@ -83,30 +85,64 @@ public class ArenaService {
         List<Location> list = new ArrayList<>();
         int idx = 0;
         while (true) {
-            if (!json.contains("\"" + idx + "\":{\"x\"")) break;
-            double x = extractDouble(json, "\"" + idx + "\":{\"x\"", 0);
-            double y = extractDouble(json, "\"" + idx + "\":{\"y\"", 0);
-            double z = extractDouble(json, "\"" + idx + "\":{\"z\"", 0);
+            String obj = extractObject(json, String.valueOf(idx));
+            if (obj == null) break;
+            double x = extractFieldDouble(obj, "x");
+            double y = extractFieldDouble(obj, "y");
+            double z = extractFieldDouble(obj, "z");
             var world = Bukkit.getWorlds().get(0);
             list.add(new Location(world, x, y, z));
             idx++;
         }
         if (list.isEmpty()) {
-            // Fallback: give a default spawn at origin
             list.add(new Location(Bukkit.getWorlds().get(0), 0, 64, 0));
         }
         return list;
     }
 
-    private double extractDouble(String json, String search, double def) {
+    /** Extract the JSON object string for a given key: "key":{...} */
+    private String extractObject(String json, String key) {
+        String search = "\"" + key + "\":{";
+        int start = json.indexOf(search);
+        if (start < 0) return null;
+        int objStart = start + search.length();
+        int depth = 1;
+        for (int i = objStart; i < json.length(); i++) {
+            if (json.charAt(i) == '{') depth++;
+            else if (json.charAt(i) == '}') {
+                depth--;
+                if (depth == 0) return json.substring(objStart, i);
+            }
+        }
+        return null;
+    }
+
+    /** Extract a double field from within an object substring */
+    private double extractFieldDouble(String obj, String field) {
+        String search = "\"" + field + "\":";
+        int idx = obj.indexOf(search);
+        if (idx < 0) return 0;
+        idx += search.length();
+        int end = obj.indexOf(",", idx);
+        if (end < 0) end = obj.length();
+        try { return Double.parseDouble(obj.substring(idx, end).trim()); }
+        catch (NumberFormatException e) { return 0; }
+    }
+
+    /** Extract a string field from the top-level JSON */
+    private String extractFieldString(String json, String key, String def) {
+        String search = "\"" + key + "\":\"";
         int idx = json.indexOf(search);
         if (idx < 0) return def;
-        idx = json.indexOf(":", idx) + 1;
-        int end = json.indexOf(",", idx);
-        if (end < 0) end = json.indexOf("}", idx);
+        idx += search.length();
+        int end = json.indexOf("\"", idx);
         if (end < 0) return def;
-        try { return Double.parseDouble(json.substring(idx, end).trim()); }
-        catch (NumberFormatException e) { return def; }
+        return json.substring(idx, end);
+    }
+
+    private Location defaultLocation() {
+        var world = Bukkit.getWorlds().get(0);
+        return new Location(world, 0, 64, 0);
     }
 
     private int extractInt(String json, String key, int def) {
@@ -119,16 +155,6 @@ public class ArenaService {
         if (end < 0) return def;
         try { return Integer.parseInt(json.substring(idx, end).trim()); }
         catch (NumberFormatException e) { return def; }
-    }
-
-    private String extractString(String json, String key, String def) {
-        String search = "\"" + key + "\":\"";
-        int idx = json.indexOf(search);
-        if (idx < 0) return def;
-        idx += search.length();
-        int end = json.indexOf("\"", idx);
-        if (end < 0) return def;
-        return json.substring(idx, end);
     }
 
     public Arena get(String id) { return activeArenas.get(id); }
@@ -147,7 +173,9 @@ public class ArenaService {
 
     public void addToWaiting(Player player, String arenaId) {
         waitingMap.put(player.getName(), arenaId);
-        arenaWaitingList.computeIfAbsent(arenaId, k -> new ArrayList<>()).add(player.getName());
+        List<String> list = arenaWaitingList.computeIfAbsent(arenaId, k -> new ArrayList<>());
+        list.remove(player.getName()); // Avoid duplicates
+        list.add(player.getName());
     }
 
     public void removeFromWaiting(Player player) {

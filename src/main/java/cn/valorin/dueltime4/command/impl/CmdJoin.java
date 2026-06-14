@@ -6,8 +6,13 @@ import cn.valorin.dueltime4.arena.ArenaState;
 import cn.valorin.dueltime4.command.SubCommand;
 import cn.valorin.dueltime4.service.ArenaService;
 import cn.valorin.dueltime4.service.BlacklistService;
+import cn.valorin.dueltime4.service.MatchService;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CmdJoin extends SubCommand {
 
@@ -45,7 +50,22 @@ public class CmdJoin extends SubCommand {
             player.sendMessage("You are already waiting for an arena. Use /dt quit first.");
             return;
         }
-        arenaService.addToWaiting(player, args[0]);
+        arenaService.addToWaiting(player, arenaId);
         player.sendMessage("You joined the waiting queue for: " + arena.getName());
+
+        // Auto-start if enough players are waiting
+        List<String> waitingNames = arenaService.getWaitingPlayers(arenaId);
+        if (waitingNames.size() >= arena.getMinPlayers()) {
+            List<Player> toStart = new ArrayList<>();
+            for (String name : waitingNames) {
+                if (toStart.size() >= arena.getMaxPlayers()) break;
+                Player p = Bukkit.getPlayerExact(name);
+                if (p != null) toStart.add(p);
+            }
+            if (toStart.size() >= arena.getMinPlayers()) {
+                MatchService matchService = DuelTimePlugin.getInstance().getMatchService();
+                matchService.startMatch(arenaId, toStart);
+            }
+        }
     }
 }
