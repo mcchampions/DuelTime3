@@ -125,6 +125,7 @@ public final class DuelTimePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (matchService != null) matchService.shutdown();
         if (databaseManager != null) databaseManager.close();
     }
 

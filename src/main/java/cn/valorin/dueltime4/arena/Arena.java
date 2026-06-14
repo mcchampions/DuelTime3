@@ -78,6 +78,9 @@ public abstract class Arena {
         return spectators.stream().anyMatch(s -> s.getPlayerName().equals(playerName));
     }
 
+    public void clearGamers() { gamers.clear(); }
+    public void clearSpectators() { spectators.clear(); }
+
     public void cancelTimer() {
         if (timer != null && !timer.isCancelled()) {
             timer.cancel();

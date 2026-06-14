@@ -190,12 +190,11 @@ public class MatchService {
             s.getPlayer().setGameMode(s.getOriginalGameMode());
             arenaService.removeSpectatorMapping(s.getPlayerName());
         }
-        arena.getSpectators().clear();
+        arena.clearSpectators();
 
         Bukkit.getPluginManager().callEvent(new ArenaEndEvent(arena, result));
 
-        // Reset arena
-        arena.getGamers().clear();
+        arena.clearGamers();
         arena.setState(ArenaState.WAITING);
     }
 

@@ -1,7 +1,7 @@
 package cn.valorin.dueltime4.config;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,7 +15,7 @@ public class Messages {
     private final Config config;
     private YamlConfiguration yaml;
     private final Map<String, String> cache = new HashMap<>();
-    private final MiniMessage mm = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
 
     public Messages(JavaPlugin plugin, Config config) {
         this.plugin = plugin;
@@ -58,7 +58,7 @@ public class Messages {
     }
 
     public Component getComponent(String path, Map<String, String> placeholders) {
-        return mm.deserialize(get(path, placeholders).replace('&', '§'));
+        return SERIALIZER.deserialize(get(path, placeholders));
     }
 
     public Component getComponent(String path) {
