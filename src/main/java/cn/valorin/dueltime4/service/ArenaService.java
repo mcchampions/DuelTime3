@@ -44,8 +44,91 @@ public class ArenaService {
         String id = (String) row.get("id");
         String name = (String) row.get("name");
         String json = (String) row.get("data_json");
-        // Full deserialization in Task 19. For now, create skeleton arena objects.
-        return null;
+
+        return switch (type) {
+            case "classic" -> {
+                var p1 = parseLocation(json, "pos1");
+                var p2 = parseLocation(json, "pos2");
+                yield new ClassicArena(id, name, p1, p2);
+            }
+            case "team" -> {
+                int size = extractInt(json, "team_size", 2);
+                var t1 = parseLocation(json, "t1_spawn");
+                var t2 = parseLocation(json, "t2_spawn");
+                yield new TeamArena(id, name, size, t1, t2);
+            }
+            case "ffa" -> {
+                int min = extractInt(json, "min_players", 3);
+                int max = extractInt(json, "max_players", 8);
+                List<Location> spawns = parseLocationList(json, "spawns");
+                yield new FFAArena(id, name, min, max, spawns);
+            }
+            default -> null;
+        };
+    }
+
+    private Location parseLocation(String json, String key) {
+        String worldName = extractString(json, "world", "world");
+        double x = extractDouble(json, key + "\":{\"x\"", 0);
+        double y = extractDouble(json, key + "\":{\"y\"", 0);
+        double z = extractDouble(json, key + "\":{\"z\"", 0);
+        float yaw = (float) extractDouble(json, key + "\":{\"yaw\"", 0);
+        float pitch = (float) extractDouble(json, key + "\":{\"pitch\"", 0);
+        var world = Bukkit.getWorld(worldName);
+        if (world == null) world = Bukkit.getWorlds().get(0);
+        return new Location(world, x, y, z, yaw, pitch);
+    }
+
+    private List<Location> parseLocationList(String json, String key) {
+        List<Location> list = new ArrayList<>();
+        int idx = 0;
+        while (true) {
+            if (!json.contains("\"" + idx + "\":{\"x\"")) break;
+            double x = extractDouble(json, "\"" + idx + "\":{\"x\"", 0);
+            double y = extractDouble(json, "\"" + idx + "\":{\"y\"", 0);
+            double z = extractDouble(json, "\"" + idx + "\":{\"z\"", 0);
+            var world = Bukkit.getWorlds().get(0);
+            list.add(new Location(world, x, y, z));
+            idx++;
+        }
+        if (list.isEmpty()) {
+            // Fallback: give a default spawn at origin
+            list.add(new Location(Bukkit.getWorlds().get(0), 0, 64, 0));
+        }
+        return list;
+    }
+
+    private double extractDouble(String json, String search, double def) {
+        int idx = json.indexOf(search);
+        if (idx < 0) return def;
+        idx = json.indexOf(":", idx) + 1;
+        int end = json.indexOf(",", idx);
+        if (end < 0) end = json.indexOf("}", idx);
+        if (end < 0) return def;
+        try { return Double.parseDouble(json.substring(idx, end).trim()); }
+        catch (NumberFormatException e) { return def; }
+    }
+
+    private int extractInt(String json, String key, int def) {
+        String search = "\"" + key + "\":";
+        int idx = json.indexOf(search);
+        if (idx < 0) return def;
+        idx += search.length();
+        int end = json.indexOf(",", idx);
+        if (end < 0) end = json.indexOf("}", idx);
+        if (end < 0) return def;
+        try { return Integer.parseInt(json.substring(idx, end).trim()); }
+        catch (NumberFormatException e) { return def; }
+    }
+
+    private String extractString(String json, String key, String def) {
+        String search = "\"" + key + "\":\"";
+        int idx = json.indexOf(search);
+        if (idx < 0) return def;
+        idx += search.length();
+        int end = json.indexOf("\"", idx);
+        if (end < 0) return def;
+        return json.substring(idx, end);
     }
 
     public Arena get(String id) { return activeArenas.get(id); }

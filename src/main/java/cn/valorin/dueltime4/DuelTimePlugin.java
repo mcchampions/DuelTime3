@@ -1,10 +1,15 @@
 package cn.valorin.dueltime4;
 
+import cn.valorin.dueltime4.command.CommandManager;
+import cn.valorin.dueltime4.command.impl.*;
 import cn.valorin.dueltime4.config.Config;
 import cn.valorin.dueltime4.config.Messages;
+import cn.valorin.dueltime4.hook.DuelTimePlaceholderExpansion;
 import cn.valorin.dueltime4.jdbc.DatabaseManager;
+import cn.valorin.dueltime4.listener.*;
 import cn.valorin.dueltime4.repository.*;
 import cn.valorin.dueltime4.service.*;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class DuelTimePlugin extends JavaPlugin {
@@ -46,7 +51,14 @@ public final class DuelTimePlugin extends JavaPlugin {
         locationRepository = new LocationRepository(databaseManager);
         blacklistRepository = new BlacklistRepository(databaseManager);
 
-        // 3. Services
+        // 3. Initialize DB tables
+        playerRepository.createTableIfNotExists();
+        arenaRepository.createTableIfNotExists();
+        recordRepository.createTableIfNotExists();
+        locationRepository.createTableIfNotExists();
+        blacklistRepository.createTableIfNotExists();
+
+        // 4. Services
         playerService = new PlayerService(playerRepository, config);
         arenaService = new ArenaService(arenaRepository, locationRepository);
         matchService = new MatchService(arenaService, playerService, recordRepository, config);
@@ -55,9 +67,60 @@ public final class DuelTimePlugin extends JavaPlugin {
         shopService = new ShopService(playerService, config);
         blacklistService = new BlacklistService(blacklistRepository);
         requestService = new RequestService();
-        migrationService = new MigrationService();
+        migrationService = new MigrationService(databaseManager, config, arenaRepository,
+            playerRepository, recordRepository, locationRepository, blacklistRepository);
 
-        getLogger().info("DuelTime4 v" + getDescription().getVersion() + " enabled (skeleton)");
+        // 5. Load arenas from DB
+        arenaService.loadAll();
+
+        // 6. Migration (if enabled in config)
+        if (config.getBoolean("migration.enabled", false)) {
+            migrationService.run();
+        }
+
+        // 7. Register commands
+        CommandManager cmdManager = new CommandManager();
+        cmdManager.register(new CmdHelp(cmdManager));
+        cmdManager.register(new CmdArena());
+        cmdManager.register(new CmdSend());
+        cmdManager.register(new CmdAccept());
+        cmdManager.register(new CmdDecline());
+        cmdManager.register(new CmdJoin());
+        cmdManager.register(new CmdQuit());
+        cmdManager.register(new CmdSpectate());
+        cmdManager.register(new CmdStart());
+        cmdManager.register(new CmdStop());
+        cmdManager.register(new CmdShop());
+        cmdManager.register(new CmdRank());
+        cmdManager.register(new CmdRecord());
+        cmdManager.register(new CmdLobby());
+        cmdManager.register(new CmdBlacklist());
+        cmdManager.register(new CmdLang());
+        cmdManager.register(new CmdReload());
+        cmdManager.register(new CmdMigrate());
+        cmdManager.register(new CmdLevel());
+
+        // 8. Register listeners
+        var pm = getServer().getPluginManager();
+        pm.registerEvents(new ArenaProtectionListener(), this);
+        pm.registerEvents(new ArenaMatchListener(), this);
+        pm.registerEvents(new ArenaSpectateListener(), this);
+        pm.registerEvents(new PlayerDataListener(), this);
+        pm.registerEvents(new ChatListener(), this);
+        pm.registerEvents(new GuiListener(), this);
+        pm.registerEvents(new RankingListener(), this);
+
+        // 9. Register PlaceholderAPI expansion if available
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new DuelTimePlaceholderExpansion(playerService).register();
+            getLogger().info("PlaceholderAPI expansion registered.");
+        }
+
+        // 10. Start ranking auto-refresh timer
+        int interval = config.getInt("ranking.refresh-interval", 60);
+        rankingService.startAutoRefresh(interval);
+
+        getLogger().info("DuelTime4 v" + getDescription().getVersion() + " enabled");
     }
 
     @Override
