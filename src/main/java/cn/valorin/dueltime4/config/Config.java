@@ -47,7 +47,6 @@ public class Config {
         return yaml.getMapList(path);
     }
 
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getSectionValues(String path) {
         var sec = yaml.getConfigurationSection(path);
         return sec == null ? Map.of() : sec.getValues(false);

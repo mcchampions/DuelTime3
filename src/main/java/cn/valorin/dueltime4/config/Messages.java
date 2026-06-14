@@ -28,6 +28,7 @@ public class Messages {
         File langFile = new File(plugin.getDataFolder(), "messages_" + lang + ".yml");
         if (!langFile.exists()) {
             plugin.saveResource("messages_zh_CN.yml", false);
+            langFile = new File(plugin.getDataFolder(), "messages_zh_CN.yml");
         }
         yaml = YamlConfiguration.loadConfiguration(langFile);
         cache.clear();
