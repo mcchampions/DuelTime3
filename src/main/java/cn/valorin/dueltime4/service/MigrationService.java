@@ -202,9 +202,9 @@ public class MigrationService {
 
             // Deserialize the Java-serialized ItemStack to get material/name/lore
             String material = "STONE";
-            String displayName = "Migrated Item " + itemId;
-            List<String> lore = List.of("&7Migrated from DuelTime3");
-            List<String> commands = List.of("say %player% bought " + itemId);
+            String displayName = null;
+            List<String> lore = new ArrayList<>();
+            List<String> commands = new ArrayList<>();
             var serializer = LegacyComponentSerializer.legacyAmpersand();
 
             try {
@@ -221,7 +221,6 @@ public class MigrationService {
                                 if (meta.hasLore()) {
                                     var lores = meta.lore();
                                     if (lores != null && !lores.isEmpty()) {
-                                        lore = new ArrayList<>();
                                         for (var c : lores) {
                                             lore.add(serializer.serialize(c));
                                         }
@@ -239,21 +238,13 @@ public class MigrationService {
             try {
                 String cmds = rs.getString("commands");
                 if (cmds != null && !cmds.isEmpty()) {
-                    commands = List.of(cmds.split(";"));
-                }
-            } catch (Exception ignored) {}
-
-            // Try description as fallback name
-            try {
-                String desc = rs.getString("description");
-                if (desc != null && !desc.isEmpty() && "Migrated Item ".contains(displayName)) {
-                    displayName = desc;
+                    commands = new ArrayList<>(List.of(cmds.split(";")));
                 }
             } catch (Exception ignored) {}
 
             item.put("id", itemId);
             item.put("material", material);
-            item.put("name", displayName);
+            item.put("name", displayName != null ? displayName : material);
             item.put("cost", cost);
             item.put("lore", lore);
             item.put("commands", commands);
