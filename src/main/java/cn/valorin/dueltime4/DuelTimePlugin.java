@@ -26,6 +26,7 @@ public final class DuelTimePlugin extends JavaPlugin {
     private RankingService rankingService;
     private ShopService shopService;
     private BlacklistService blacklistService;
+    private RequestService requestService;
     private MigrationService migrationService;
 
     @Override
@@ -39,8 +40,22 @@ public final class DuelTimePlugin extends JavaPlugin {
 
         // 2. Database & Repositories
         databaseManager = new DatabaseManager(config);
-        // Repositories will be created in Task 4
-        // initTables() will be called in Task 4
+        playerRepository = new PlayerRepository(databaseManager);
+        arenaRepository = new ArenaRepository(databaseManager);
+        recordRepository = new RecordRepository(databaseManager);
+        locationRepository = new LocationRepository(databaseManager);
+        blacklistRepository = new BlacklistRepository(databaseManager);
+
+        // 3. Services
+        playerService = new PlayerService(playerRepository, config);
+        arenaService = new ArenaService(arenaRepository, locationRepository);
+        matchService = new MatchService(arenaService, playerService, recordRepository, config);
+        spectateService = new SpectateService(arenaService);
+        rankingService = new RankingService(playerService);
+        shopService = new ShopService(playerService, config);
+        blacklistService = new BlacklistService(blacklistRepository);
+        requestService = new RequestService();
+        migrationService = new MigrationService();
 
         getLogger().info("DuelTime4 v" + getDescription().getVersion() + " enabled (skeleton)");
     }
@@ -54,4 +69,18 @@ public final class DuelTimePlugin extends JavaPlugin {
     public Config getCfg() { return config; }
     public Messages getMsg() { return messages; }
     public DatabaseManager getDb() { return databaseManager; }
+    public PlayerRepository getPlayerRepository() { return playerRepository; }
+    public ArenaRepository getArenaRepository() { return arenaRepository; }
+    public RecordRepository getRecordRepository() { return recordRepository; }
+    public LocationRepository getLocationRepository() { return locationRepository; }
+    public BlacklistRepository getBlacklistRepository() { return blacklistRepository; }
+    public PlayerService getPlayerService() { return playerService; }
+    public ArenaService getArenaService() { return arenaService; }
+    public MatchService getMatchService() { return matchService; }
+    public SpectateService getSpectateService() { return spectateService; }
+    public RankingService getRankingService() { return rankingService; }
+    public ShopService getShopService() { return shopService; }
+    public BlacklistService getBlacklistService() { return blacklistService; }
+    public RequestService getRequestService() { return requestService; }
+    public MigrationService getMigrationService() { return migrationService; }
 }
