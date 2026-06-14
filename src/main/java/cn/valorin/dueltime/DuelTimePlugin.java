@@ -88,11 +88,14 @@ public final class DuelTimePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // 直接调用 end() 而非 stop()，避免依赖事件监听器（热卸载时监听器可能已反注册）
         for (BaseArena arena : arenaManager.getList()) {
             if (arena.getState() == BaseArena.State.IN_PROGRESS_OPENED || arena.getState() == BaseArena.State.IN_PROGRESS_CLOSED) {
-                arenaManager.stop(arena.getId(), null);
+                arenaManager.end(arena.getId());
             }
         }
+        // 清空所有残留映射
+        arenaManager.getMap().clear();
         hologramManager.disable();
         if (cacheManager.getPlayerDataCache().getRefreshRankingTimer() != null) {
             cacheManager.getPlayerDataCache().getRefreshRankingTimer().cancel();

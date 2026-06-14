@@ -4,8 +4,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class SqlHelper implements AutoCloseable {
+
+    private static final Logger LOG = Logger.getLogger("DuelTime4");
 
     private final Connection conn;
 
@@ -72,6 +75,6 @@ public class SqlHelper implements AutoCloseable {
 
     @Override
     public void close() {
-        try { conn.close(); } catch (SQLException ignored) {}
+        try { conn.close(); } catch (SQLException e) { LOG.warning("Failed to close connection: " + e.getMessage()); }
     }
 }

@@ -112,11 +112,18 @@ public class BaseArenaListener implements Listener {
         if (attackerArena == null) {
             //说明为观众或者无关人员，阻止攻击，并予以提示
             event.setCancelled(true);
+            DuelTimePlugin.getInstance().getLogger().info(
+                "[DT-DEBUG] " + attacker.getName() + " -> " + target.getName()
+                + " 攻击被阻: attackerArena=null, targetArena=" + arena.getName());
             MsgBuilder.sendActionBar(MsgBuilder.get(Msg.ARENA_PROTECTION_ATTACK_GAMER, attacker, arena.getName()), attacker, true);
         } else {
             if (!attackerArena.getId().equals(arena.getId())) {
                 //说明攻击方是其他竞技场的，虽然这种情况不太平凡，但还是考虑一下，不予提示
                 event.setCancelled(true);
+                DuelTimePlugin.getInstance().getLogger().info(
+                    "[DT-DEBUG] " + attacker.getName() + " -> " + target.getName()
+                    + " 攻击被阻: attackerArena=" + attackerArena.getName()
+                    + ", targetArena=" + arena.getName());
             }
         }
     }
@@ -320,11 +327,16 @@ public class BaseArenaListener implements Listener {
                 return;
             }
             event.setCancelled(true);
+            DuelTimePlugin.getInstance().getLogger().info(
+                "[DT-DEBUG] " + player.getName() + " 交互被阻: playerArena=null, blockArena=" + blockArena.getName());
             MsgBuilder.sendActionBar(MsgBuilder.get(informMsg, player, blockArena.getName()), player, true);
         } else {
             //当前玩家在比赛中，则判断当前方块在不在自己所属的竞技场中，如果不在则一律阻止，反之则根据白名单选择性阻止
             if (blockArena == null || !blockArena.getId().equals(playerArena.getId())) {
                 event.setCancelled(true);
+                DuelTimePlugin.getInstance().getLogger().info(
+                    "[DT-DEBUG] " + player.getName() + " 交互被阻: playerArena=" + playerArena.getName()
+                    + ", blockArena=" + (blockArena == null ? "null" : blockArena.getName()));
             } else {
                 if (!playerArena.getArenaType().getPresets().containsKey(presetType)) {
                     return;

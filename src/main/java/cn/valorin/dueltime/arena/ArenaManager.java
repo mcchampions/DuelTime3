@@ -131,6 +131,8 @@ public class ArenaManager {
             }
             // 兜底清理：移除所有指向该竞技场的残留映射（如 join() 等途径产生的）
             gamerArenaMap.values().removeIf(id::equals);
+            DuelTimePlugin.getInstance().getLogger().info(
+                "[DT-DEBUG] end(" + id + ") 清理完成, gamerArenaMap剩余: " + gamerArenaMap.size());
             arena.end();
             updateStartInventory();
             Bukkit.getServer().getPluginManager().callEvent(new ArenaEndEvent(arena));

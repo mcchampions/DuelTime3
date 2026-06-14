@@ -397,8 +397,7 @@ public class ClassicArenaListener implements Listener {
         player.teleport((Location) (arena.getArenaData().getFunctionData(ArenaType.FunctionInternalType.CLASSIC_SPECTATE)[2]));
         ClassicSpectatorData spectatorData = (ClassicSpectatorData) arena.getSpector(player.getName());
         if (DuelTimePlugin.serverVersionInt >= 8) {
-            Bukkit.getScheduler().runTaskLater(DuelTimePlugin.getInstance(), () ->
-                    player.setGameMode(GameMode.SPECTATOR), 1);
+            player.setGameMode(GameMode.SPECTATOR);
         }
         spectatorData.updateRecentLocation(player.getLocation());
         MsgBuilder.send(Msg.ARENA_TYPE_CLASSIC_FUNCTION_SPECTATE_SUCCESSFULLY, player,

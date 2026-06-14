@@ -17,6 +17,7 @@ import cn.valorin.dueltime.level.Tier;
 import cn.valorin.dueltime.listener.arena.BaseArenaListener;
 import cn.valorin.dueltime.listener.arena.ClassicArenaListener;
 import cn.valorin.dueltime.util.UtilFormat;
+import cn.valorin.dueltime.util.UtilGeometry;
 import cn.valorin.dueltime.util.UtilMath;
 import cn.valorin.dueltime.util.UtilSync;
 import cn.valorin.dueltime.viaversion.ViaVersion;
@@ -218,7 +219,7 @@ public class ClassicArena extends BaseArena {
                 double expChange;
                 PlayerData playerData = playerDataCache.get(playerName);
                 Location lobby = DuelTimePlugin.getInstance().getCacheManager().getLocationCache().get(LocationCache.InternalType.LOBBY.getId());
-                Location back = lobby != null ? lobby : ((ClassicGamerData) gamerData).getOriginalLocation();
+                Location back = getSafeBackLocation(lobby != null ? lobby : ((ClassicGamerData) gamerData).getOriginalLocation());
                 if (result == ClassicArenaRecordData.Result.DRAW) {
                     resultMsg = Msg.ARENA_TYPE_CLASSIC_END_RESULT_DRAW;
                     playerData.accumulateArenaClassicDraws();
@@ -352,7 +353,7 @@ public class ClassicArena extends BaseArena {
             //强制停赛，则直接把玩家带回大厅或原点
             Location lobby = DuelTimePlugin.getInstance().getCacheManager().getLocationCache().get(LocationCache.InternalType.LOBBY.getId());
             for (BaseGamerData gamerData : getGamerDataList()) {
-                Location back = lobby != null ? lobby : ((ClassicGamerData) gamerData).getOriginalLocation();
+                Location back = getSafeBackLocation(lobby != null ? lobby : ((ClassicGamerData) gamerData).getOriginalLocation());
                 gamerData.getPlayer().teleport(back);
             }
         }
@@ -425,6 +426,16 @@ public class ClassicArena extends BaseArena {
         setGamerDataList(new ArrayList<>());
         //将竞技场恢复为等待状态
         setState(State.WAITING);
+    }
+
+    private Location getSafeBackLocation(Location preferred) {
+        if (preferred != null && UtilGeometry.getArena(preferred) == null) {
+            return preferred;
+        }
+        if (preferred != null && preferred.getWorld() != null) {
+            return preferred.getWorld().getSpawnLocation();
+        }
+        return Bukkit.getWorlds().get(0).getSpawnLocation();
     }
 
     public void confirmResult(ClassicArena.Result result, Player winner) {

@@ -13,7 +13,7 @@ public class DatabaseManager {
 
     private final HikariDataSource dataSource;
     private final Config config;
-    private boolean sqlite;
+    private final boolean sqlite;
 
     public DatabaseManager(Config config) {
         this.config = config;
@@ -57,10 +57,18 @@ public class DatabaseManager {
                 db.raw().commit();
                 return result;
             } catch (Exception e) {
-                db.raw().rollback();
+                try {
+                    db.raw().rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
                 throw e;
             } finally {
-                db.raw().setAutoCommit(true);
+                try {
+                    db.raw().setAutoCommit(true);
+                } catch (SQLException ignored) {
+                    // Connection is dead anyway, propagate original exception
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Transaction failed", e);
