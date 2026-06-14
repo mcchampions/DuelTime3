@@ -47,6 +47,12 @@ public abstract class Arena {
     protected abstract Map<String, Object> onEnd();
     protected abstract void onForceStop();
 
+    /** Public wrappers for cross-package access */
+    public void start() { onStart(); }
+    public void tick(int secondsElapsed) { onTick(secondsElapsed); }
+    public Map<String, Object> end() { return onEnd(); }
+    public void forceStop() { onForceStop(); }
+
     /** Whether a world location falls within this arena's boundaries */
     public abstract boolean contains(Location loc);
 
