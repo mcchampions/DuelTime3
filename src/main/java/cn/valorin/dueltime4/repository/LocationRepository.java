@@ -14,17 +14,15 @@ public class LocationRepository {
     public LocationRepository(DatabaseManager db) { this.db = db; }
 
     public void createTableIfNotExists() {
-        db.executeDDL("""
-            CREATE TABLE IF NOT EXISTS location_data (
-                key TEXT PRIMARY KEY,
-                world TEXT NOT NULL,
-                x REAL NOT NULL,
-                y REAL NOT NULL,
-                z REAL NOT NULL,
-                yaw REAL DEFAULT 0,
-                pitch REAL DEFAULT 0
-            )
-        """);
+        db.executeDDL("CREATE TABLE IF NOT EXISTS location_data ("
+            + "key " + db.pkType() + ","
+            + "world TEXT NOT NULL,"
+            + "x REAL NOT NULL,"
+            + "y REAL NOT NULL,"
+            + "z REAL NOT NULL,"
+            + "yaw REAL DEFAULT 0,"
+            + "pitch REAL DEFAULT 0"
+            + ")");
     }
 
     public Optional<Location> get(String key) {
@@ -41,13 +39,10 @@ public class LocationRepository {
 
     public void set(String key, Location loc) {
         try (SqlHelper sql = db.open()) {
-            sql.update("""
-                INSERT INTO location_data (key, world, x, y, z, yaw, pitch)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(key) DO UPDATE SET
-                    world = excluded.world, x = excluded.x, y = excluded.y,
-                    z = excluded.z, yaw = excluded.yaw, pitch = excluded.pitch
-            """, key, loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ(),
+            sql.update("INSERT INTO location_data (key, world, x, y, z, yaw, pitch) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?) "
+                + db.upsertSql("key", "world", "x", "y", "z", "yaw", "pitch"),
+                key, loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ(),
                 loc.getYaw(), loc.getPitch());
         }
     }

@@ -83,5 +83,30 @@ public class DatabaseManager {
 
     public boolean isSqlite() { return sqlite; }
 
+    /** Returns SQLite-compatible upsert: "ON CONFLICT(col) DO UPDATE SET ..." */
+    public String upsertSql(String conflictCol, String... columns) {
+        if (sqlite) {
+            StringBuilder sb = new StringBuilder("ON CONFLICT(").append(conflictCol).append(") DO UPDATE SET ");
+            for (int i = 0; i < columns.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(columns[i]).append(" = excluded.").append(columns[i]);
+            }
+            return sb.toString();
+        } else {
+            StringBuilder sb = new StringBuilder("ON DUPLICATE KEY UPDATE ");
+            for (int i = 0; i < columns.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(columns[i]).append(" = VALUES(").append(columns[i]).append(")");
+            }
+            return sb.toString();
+        }
+    }
+
+    /** DDL column type for a text primary key */
+    public String pkType() { return sqlite ? "TEXT PRIMARY KEY" : "VARCHAR(36) PRIMARY KEY"; }
+
+    /** DDL clause for auto-incrementing integer primary key */
+    public String autoInc() { return sqlite ? "AUTOINCREMENT" : "AUTO_INCREMENT"; }
+
     public void close() { dataSource.close(); }
 }

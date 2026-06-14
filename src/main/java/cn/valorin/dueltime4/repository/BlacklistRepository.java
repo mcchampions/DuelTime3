@@ -12,12 +12,10 @@ public class BlacklistRepository {
     public BlacklistRepository(DatabaseManager db) { this.db = db; }
 
     public void createTableIfNotExists() {
-        db.executeDDL("""
-            CREATE TABLE IF NOT EXISTS blacklist (
-                player_name TEXT PRIMARY KEY,
-                reason TEXT DEFAULT ''
-            )
-        """);
+        db.executeDDL("CREATE TABLE IF NOT EXISTS blacklist ("
+            + "player_name " + db.pkType() + ","
+            + "reason TEXT DEFAULT ''"
+            + ")");
     }
 
     public boolean isBlacklisted(String playerName) {
@@ -29,8 +27,13 @@ public class BlacklistRepository {
 
     public void add(String playerName, String reason) {
         try (SqlHelper sql = db.open()) {
-            sql.update("INSERT OR REPLACE INTO blacklist (player_name, reason) VALUES (?, ?)",
-                playerName, reason);
+            if (db.isSqlite()) {
+                sql.update("INSERT OR REPLACE INTO blacklist (player_name, reason) VALUES (?, ?)",
+                    playerName, reason);
+            } else {
+                sql.update("REPLACE INTO blacklist (player_name, reason) VALUES (?, ?)",
+                    playerName, reason);
+            }
         }
     }
 

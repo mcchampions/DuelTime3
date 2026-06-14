@@ -12,23 +12,21 @@ public class RecordRepository {
     public RecordRepository(DatabaseManager db) { this.db = db; }
 
     public void createTableIfNotExists() {
-        db.executeDDL("""
-            CREATE TABLE IF NOT EXISTS arena_record (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_name TEXT NOT NULL,
-                arena_id TEXT NOT NULL,
-                arena_type TEXT NOT NULL,
-                opponent_name TEXT,
-                result TEXT NOT NULL,
-                duration INTEGER DEFAULT 0,
-                exp_change REAL DEFAULT 0,
-                hit_count INTEGER DEFAULT 0,
-                total_damage REAL DEFAULT 0,
-                max_damage REAL DEFAULT 0,
-                avg_damage REAL DEFAULT 0,
-                time TEXT NOT NULL
-            )
-        """);
+        db.executeDDL("CREATE TABLE IF NOT EXISTS arena_record ("
+            + "id INTEGER PRIMARY KEY " + db.autoInc() + ","
+            + "player_name TEXT NOT NULL,"
+            + "arena_id TEXT NOT NULL,"
+            + "arena_type TEXT NOT NULL,"
+            + "opponent_name TEXT,"
+            + "result TEXT NOT NULL,"
+            + "duration INTEGER DEFAULT 0,"
+            + "exp_change REAL DEFAULT 0,"
+            + "hit_count INTEGER DEFAULT 0,"
+            + "total_damage REAL DEFAULT 0,"
+            + "max_damage REAL DEFAULT 0,"
+            + "avg_damage REAL DEFAULT 0,"
+            + "time TEXT NOT NULL"
+            + ")");
     }
 
     public void insert(String playerName, String arenaId, String arenaType, String opponent,

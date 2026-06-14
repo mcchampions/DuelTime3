@@ -12,16 +12,14 @@ public class ArenaRepository {
     public ArenaRepository(DatabaseManager db) { this.db = db; }
 
     public void createTableIfNotExists() {
-        db.executeDDL("""
-            CREATE TABLE IF NOT EXISTS arena_data (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                type TEXT NOT NULL,
-                world TEXT,
-                enabled INTEGER DEFAULT 1,
-                data_json TEXT NOT NULL
-            )
-        """);
+        db.executeDDL("CREATE TABLE IF NOT EXISTS arena_data ("
+            + "id " + db.pkType() + ","
+            + "name TEXT NOT NULL,"
+            + "type TEXT NOT NULL,"
+            + "world TEXT,"
+            + "enabled INTEGER DEFAULT 1,"
+            + "data_json TEXT NOT NULL"
+            + ")");
     }
 
     public List<Map<String, Object>> findAll() {
@@ -55,13 +53,10 @@ public class ArenaRepository {
 
     public void save(String id, String name, String type, String world, String dataJson) {
         try (SqlHelper sql = db.open()) {
-            sql.update("""
-                INSERT INTO arena_data (id, name, type, world, enabled, data_json)
-                VALUES (?, ?, ?, ?, 1, ?)
-                ON CONFLICT(id) DO UPDATE SET
-                    name = excluded.name, type = excluded.type,
-                    world = excluded.world, data_json = excluded.data_json
-            """, id, name, type, world, dataJson);
+            sql.update("INSERT INTO arena_data (id, name, type, world, enabled, data_json) "
+                + "VALUES (?, ?, ?, ?, 1, ?) "
+                + db.upsertSql("id", "name", "type", "world", "data_json"),
+                id, name, type, world, dataJson);
         }
     }
 
