@@ -8,6 +8,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.*;
 
@@ -15,6 +16,7 @@ public class ShopGui extends PagedGui {
 
     private final ShopService shopService;
     private final List<Map<?, ?>> items;
+    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
 
     public ShopGui(Player player) {
         super(player, "Points Shop");
@@ -30,18 +32,29 @@ public class ShopGui extends PagedGui {
         int end = Math.min(start + PAGE_SIZE, items.size());
         for (int i = start; i < end; i++) {
             Map<?, ?> shopItem = items.get(i);
-            ItemStack stack;
-            Object itemData = shopItem.get("item");
-            if (itemData instanceof Map<?, ?> itemMap) {
-                stack = ItemStack.deserialize((Map<String, Object>) itemMap);
-            } else {
-                stack = new ItemStack(Material.STONE);
-            }
+            Material mat = Material.valueOf((String) shopItem.get("material"));
+            int amount = 1;
+            Object amtObj = shopItem.get("amount");
+            if (amtObj instanceof Number n) amount = n.intValue();
+            ItemStack stack = new ItemStack(mat, amount);
             ItemMeta meta = stack.getItemMeta();
-            List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-            lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));
-            lore.add(Component.text("§aClick to buy!"));
-            meta.lore(lore);
+            Object nameObj = shopItem.get("name");
+            if (nameObj instanceof String s) meta.displayName(SERIALIZER.deserialize(s));
+            Object loreObj = shopItem.get("lore");
+            if (loreObj instanceof List<?> list && !list.isEmpty()) {
+                List<Component> lore = new ArrayList<>();
+                for (Object o : list) {
+                    if (o instanceof String s) lore.add(SERIALIZER.deserialize(s));
+                }
+                lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));
+                lore.add(Component.text("§aClick to buy!"));
+                meta.lore(lore);
+            } else {
+                meta.lore(List.of(
+                    Component.text("§7Cost: §e" + shopItem.get("cost") + " points"),
+                    Component.text("§aClick to buy!")
+                ));
+            }
             stack.setItemMeta(meta);
             result.add(stack);
         }

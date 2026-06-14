@@ -13,6 +13,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.sql.*;
@@ -195,6 +197,7 @@ public class MigrationService {
 
     private void migrateShopItems(SqlHelper oldDb) {
         var items = new ArrayList<LinkedHashMap<String, Object>>();
+        var serializer = LegacyComponentSerializer.legacyAmpersand();
         oldDb.query("SELECT * FROM dueltime_shop", rs -> {
             var item = new LinkedHashMap<String, Object>();
             String itemId = String.valueOf(shopItemCount);
@@ -210,8 +213,11 @@ public class MigrationService {
                 }
             } catch (Exception ignored) {}
 
-            // Deserialize and re-serialize ItemStack to YAML-compatible map
-            Map<String, Object> serializedItem = new LinkedHashMap<>();
+            // Deserialize DT3 ItemStack, extract plain fields (NO ==: tag)
+            String material = "STONE";
+            int amount = 1;
+            String displayName = null;
+            List<String> lore = new ArrayList<>();
             try {
                 String base64 = rs.getString("item_stack");
                 if (base64 != null && !base64.isEmpty()) {
@@ -219,7 +225,20 @@ public class MigrationService {
                     try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
                         Object obj = ois.readObject();
                         if (obj instanceof ItemStack stack && stack.getType() != Material.AIR) {
-                            serializedItem = new LinkedHashMap<>(stack.serialize());
+                            material = stack.getType().name();
+                            amount = stack.getAmount();
+                            if (stack.hasItemMeta()) {
+                                var meta = stack.getItemMeta();
+                                displayName = serializer.serialize(meta.displayName());
+                                if (meta.hasLore()) {
+                                    var lores = meta.lore();
+                                    if (lores != null && !lores.isEmpty()) {
+                                        for (var c : lores) {
+                                            lore.add(serializer.serialize(c));
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -228,7 +247,10 @@ public class MigrationService {
             }
 
             item.put("id", itemId);
-            item.put("item", serializedItem);
+            item.put("material", material);
+            item.put("amount", amount);
+            if (displayName != null) item.put("name", displayName);
+            item.put("lore", lore);
             item.put("cost", cost);
             item.put("commands", commands);
             items.add(item);
