@@ -2,13 +2,12 @@ package cn.valorin.dueltime4.gui;
 
 import cn.valorin.dueltime4.DuelTimePlugin;
 import cn.valorin.dueltime4.service.ShopService;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.*;
 
@@ -16,7 +15,6 @@ public class ShopGui extends PagedGui {
 
     private final ShopService shopService;
     private final List<Map<?, ?>> items;
-    private static final LegacyComponentSerializer SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
 
     public ShopGui(Player player) {
         super(player, "Points Shop");
@@ -25,36 +23,24 @@ public class ShopGui extends PagedGui {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected List<ItemStack> getPageItems(int page) {
         List<ItemStack> result = new ArrayList<>();
         int start = page * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, items.size());
         for (int i = start; i < end; i++) {
             Map<?, ?> shopItem = items.get(i);
-            Material mat = Material.valueOf((String) shopItem.get("material"));
-            int amount = 1;
-            Object amtObj = shopItem.get("amount");
-            if (amtObj instanceof Number n) amount = n.intValue();
-            ItemStack stack = new ItemStack(mat, amount);
-            ItemMeta meta = stack.getItemMeta();
-            Object nameObj = shopItem.get("name");
-            if (nameObj instanceof String s) meta.displayName(SERIALIZER.deserialize(s));
-            Object loreObj = shopItem.get("lore");
-            if (loreObj instanceof List<?> list && !list.isEmpty()) {
-                List<Component> lore = new ArrayList<>();
-                for (Object o : list) {
-                    if (o instanceof String s) lore.add(SERIALIZER.deserialize(s));
-                }
-                lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));
-                lore.add(Component.text("§aClick to buy!"));
-                meta.lore(lore);
+            Object itemData = shopItem.get("item");
+            ItemStack stack;
+            if (itemData instanceof ItemStack s) {
+                stack = s.clone();
             } else {
-                meta.lore(List.of(
-                    Component.text("§7Cost: §e" + shopItem.get("cost") + " points"),
-                    Component.text("§aClick to buy!")
-                ));
+                stack = new ItemStack(Material.STONE);
             }
+            ItemMeta meta = stack.getItemMeta();
+            List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+            lore.add(Component.text("§7Cost: §e" + shopItem.get("cost") + " points"));
+            lore.add(Component.text("§aClick to buy!"));
+            meta.lore(lore);
             stack.setItemMeta(meta);
             result.add(stack);
         }
@@ -75,7 +61,7 @@ public class ShopGui extends PagedGui {
             String itemId = (String) items.get(index).get("id");
             boolean success = shopService.buy(player, itemId);
             if (success) player.sendMessage("§aPurchased!");
-            else player.sendMessage("§cNot enough points or inventory full!");
+            else player.sendMessage("§cNot enough points!");
             player.closeInventory();
         }
     }
