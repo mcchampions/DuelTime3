@@ -181,7 +181,14 @@ public class ArenaService {
 
     public void setArenaEnabled(String id, boolean enabled) {
         repo.setEnabled(id, enabled);
-        if (!enabled) activeArenas.remove(id);
+        if (enabled) {
+            repo.findById(id).ifPresent(row -> {
+                Arena arena = buildArena(row);
+                if (arena != null) activeArenas.put(id, arena);
+            });
+        } else {
+            activeArenas.remove(id);
+        }
     }
 
     public void deleteArena(String id) {

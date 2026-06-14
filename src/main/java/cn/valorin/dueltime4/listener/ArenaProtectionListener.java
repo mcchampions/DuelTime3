@@ -30,7 +30,16 @@ public class ArenaProtectionListener implements Listener {
 
         Arena playerArena = svc().getByPlayer(p);
         Arena targetArena = findArenaAt(to);
-        if (targetArena != null && playerArena == null) {
+        if (targetArena == null) return;
+
+        // Player in one arena cannot enter a different arena
+        if (playerArena != null && !playerArena.getId().equals(targetArena.getId())) {
+            e.setCancelled(true);
+            return;
+        }
+
+        // Non-participant cannot enter any arena
+        if (playerArena == null) {
             if (targetArena.getState() == ArenaState.WAITING || targetArena.getState() == ArenaState.DISABLED) {
                 e.setCancelled(true); return;
             }

@@ -29,14 +29,19 @@ public class SpectateService {
     public void stopSpectating(Player player) {
         Arena arena = arenaService.getSpectating(player);
         if (arena == null) return;
-        arena.removeSpectator(player.getName());
-        arenaService.removeSpectatorMapping(player.getName());
+        // Find the spectator BEFORE removing to restore state
+        Spectator found = null;
         for (Spectator s : arena.getSpectators()) {
             if (s.getPlayerName().equals(player.getName())) {
-                player.setGameMode(s.getOriginalGameMode());
-                player.teleport(s.getOriginalLocation());
+                found = s;
                 break;
             }
+        }
+        arena.removeSpectator(player.getName());
+        arenaService.removeSpectatorMapping(player.getName());
+        if (found != null) {
+            player.setGameMode(found.getOriginalGameMode());
+            player.teleport(found.getOriginalLocation());
         }
     }
 }

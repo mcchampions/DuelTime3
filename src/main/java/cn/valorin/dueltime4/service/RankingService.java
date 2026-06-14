@@ -19,7 +19,7 @@ public class RankingService {
         new BukkitRunnable() {
             @Override
             public void run() { refresh(); }
-        }.runTaskTimerAsynchronously(DuelTimePlugin.getInstance(), intervalSeconds * 20L, intervalSeconds * 20L);
+        }.runTaskTimer(DuelTimePlugin.getInstance(), intervalSeconds * 20L, intervalSeconds * 20L);
     }
 
     public void refresh() {

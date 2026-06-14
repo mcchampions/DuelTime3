@@ -52,8 +52,9 @@ public class CmdArena extends SubCommand {
                     return;
                 }
 
-                arenaService.saveArena(arena, "{}");
-                sender.sendMessage("Arena created: " + name + " (" + id + ") type=" + type);
+                String dataJson = buildDataJson(type, loc);
+                arenaService.saveArena(arena, dataJson);
+                sender.sendMessage("Arena created: " + name + " (" + id + ") type=" + type + ". Use /dt arena setpos <id> <1|2> to set positions.");
             }
             case "delete" -> {
                 if (args.length < 2) {
@@ -90,5 +91,22 @@ public class CmdArena extends SubCommand {
             }
             default -> sender.sendMessage("Unknown subcommand. Use: create, delete, list, toggle");
         }
+    }
+
+    private String buildDataJson(String type, Location loc) {
+        double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+        String world = loc.getWorld() != null ? loc.getWorld().getName() : "world";
+        return switch (type) {
+            case "classic" -> String.format(
+                "{\"world\":\"%s\",\"pos1\":{\"x\":%f,\"y\":%f,\"z\":%f},\"pos2\":{\"x\":%f,\"y\":%f,\"z\":%f}}",
+                world, x, y, z, x, y, z);
+            case "team" -> String.format(
+                "{\"world\":\"%s\",\"team_size\":2,\"t1_spawn\":{\"x\":%f,\"y\":%f,\"z\":%f},\"t2_spawn\":{\"x\":%f,\"y\":%f,\"z\":%f}}",
+                world, x, y, z, x, y, z);
+            case "ffa" -> String.format(
+                "{\"world\":\"%s\",\"min_players\":2,\"max_players\":8,\"spawns\":[{\"0\":{\"x\":%f,\"y\":%f,\"z\":%f}}]}",
+                world, x, y, z);
+            default -> "{}";
+        };
     }
 }
