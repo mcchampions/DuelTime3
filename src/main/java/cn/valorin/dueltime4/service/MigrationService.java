@@ -8,13 +8,19 @@ import cn.valorin.dueltime4.player.PlayerProfile;
 import cn.valorin.dueltime4.repository.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.io.BukkitObjectInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class MigrationService {
 
@@ -189,27 +195,68 @@ public class MigrationService {
         var items = new ArrayList<LinkedHashMap<String, Object>>();
         oldDb.query("SELECT * FROM dueltime_shop", rs -> {
             var item = new LinkedHashMap<String, Object>();
-            String itemId = "migrated_" + shopItemCount;
+            String itemId = String.valueOf(shopItemCount);
             try { itemId = String.valueOf(rs.getInt("id")); } catch (Exception ignored) {}
+            int cost = 1;
+            try { cost = (int) rs.getDouble("point"); } catch (Exception ignored) {}
 
-            item.put("id", itemId);
-            item.put("material", "STONE");
+            // Deserialize the Java-serialized ItemStack to get material/name/lore
+            String material = "STONE";
+            String displayName = "Migrated Item " + itemId;
+            List<String> lore = List.of("&7Migrated from DuelTime3");
+            List<String> commands = List.of("say %player% bought " + itemId);
+            var serializer = LegacyComponentSerializer.legacyAmpersand();
+
             try {
-                String desc = rs.getString("description");
-                item.put("name", desc != null ? desc : "Migrated Item " + itemId);
-            } catch (Exception ignored) {
-                item.put("name", "Migrated Item " + itemId);
+                String base64 = rs.getString("item_stack");
+                if (base64 != null && !base64.isEmpty()) {
+                    byte[] data = Base64.getDecoder().decode(base64);
+                    try (BukkitObjectInputStream ois = new BukkitObjectInputStream(new ByteArrayInputStream(data))) {
+                        Object obj = ois.readObject();
+                        if (obj instanceof ItemStack stack && stack.getType() != Material.AIR) {
+                            material = stack.getType().name();
+                            if (stack.hasItemMeta()) {
+                                var meta = stack.getItemMeta();
+                                displayName = serializer.serialize(meta.displayName());
+                                if (meta.hasLore()) {
+                                    var lores = meta.lore();
+                                    if (lores != null && !lores.isEmpty()) {
+                                        lore = new ArrayList<>();
+                                        for (var c : lores) {
+                                            lore.add(serializer.serialize(c));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warning("Failed to deserialize shop item " + itemId + ": " + e.getMessage());
             }
-            try { item.put("cost", (int) rs.getDouble("point")); } catch (Exception ignored) {
-                item.put("cost", 1);
-            }
-            item.put("lore", List.of("&7Migrated from DuelTime3"));
+
+            // Try to read commands from the commands column
             try {
                 String cmds = rs.getString("commands");
-                item.put("commands", cmds != null ? List.of(cmds.split(";")) : List.of("say %player% bought " + itemId));
-            } catch (Exception ignored) {
-                item.put("commands", List.of("say %player% bought " + itemId));
-            }
+                if (cmds != null && !cmds.isEmpty()) {
+                    commands = List.of(cmds.split(";"));
+                }
+            } catch (Exception ignored) {}
+
+            // Try description as fallback name
+            try {
+                String desc = rs.getString("description");
+                if (desc != null && !desc.isEmpty() && "Migrated Item ".contains(displayName)) {
+                    displayName = desc;
+                }
+            } catch (Exception ignored) {}
+
+            item.put("id", itemId);
+            item.put("material", material);
+            item.put("name", displayName);
+            item.put("cost", cost);
+            item.put("lore", lore);
+            item.put("commands", commands);
             items.add(item);
             shopItemCount++;
             return null;
