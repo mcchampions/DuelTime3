@@ -85,12 +85,12 @@ shop:
         - "give %player% experience_bottle 16"
 
 migration:
-  enabled: false
-  old-plugin-folder: "plugins/DuelTime3"
+  enabled: true
+  old-plugin-folder: "plugins/DuelTime"
   old-database:
     type: sqlite
     sqlite:
-      path: "plugins/DuelTime3/dueltime.db"
+      path: "plugins/DuelTime/sqlite.db"
     mysql:
       host: localhost
       port: 3306

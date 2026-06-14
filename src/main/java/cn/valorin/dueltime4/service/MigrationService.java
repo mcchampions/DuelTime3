@@ -4,12 +4,17 @@ import cn.valorin.dueltime4.config.Config;
 import cn.valorin.dueltime4.event.MigrationCompleteEvent;
 import cn.valorin.dueltime4.jdbc.DatabaseManager;
 import cn.valorin.dueltime4.jdbc.SqlHelper;
+import cn.valorin.dueltime4.player.PlayerProfile;
 import cn.valorin.dueltime4.repository.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 
 import java.io.File;
 import java.sql.*;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MigrationService {
 
@@ -21,6 +26,10 @@ public class MigrationService {
     private final LocationRepository locationRepo;
     private final BlacklistRepository blacklistRepo;
     private final Logger log = Bukkit.getLogger();
+
+    // DT3 location format: "DUELTIME LOCATION world,x,y,z,yaw,pitch"
+    private static final Pattern LOC_PATTERN =
+        Pattern.compile("DUELTIME LOCATION (.+?),(-?[\\d.]+),(-?[\\d.]+),(-?[\\d.]+),(-?[\\d.]+),(-?[\\d.]+)");
 
     private int arenaCount, playerCount, recordCount, shopItemCount;
 
@@ -50,24 +59,28 @@ public class MigrationService {
             pass = config.getString("migration.old-database.mysql.password", "");
             jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?useSSL=false";
         } else {
-            String path = config.getString("migration.old-database.sqlite.path", "plugins/DuelTime3/dueltime.db");
+            String path = config.getString("migration.old-database.sqlite.path", "plugins/DuelTime/sqlite.db");
             File f = new File(path);
-            if (!f.isAbsolute()) f = new File(config.getPlugin().getDataFolder().getParentFile(), path);
+            if (!f.isAbsolute()) {
+                // Resolve relative to server root (plugins/ folder parent)
+                f = new File(config.getPlugin().getDataFolder().getParentFile().getParentFile(), path);
+            }
             jdbcUrl = "jdbc:sqlite:" + f.getAbsolutePath();
         }
 
+        log.info("[DuelTime4] Connecting to old database: " + jdbcUrl);
         try (Connection oldConn = user != null ?
                 DriverManager.getConnection(jdbcUrl, user, pass) :
                 DriverManager.getConnection(jdbcUrl);
              SqlHelper oldDb = new SqlHelper(oldConn)) {
 
             db.withTransaction(newDb -> {
-                try { migratePlayers(oldDb); } catch (Exception e) { log.warning("Player migration error: " + e.getMessage()); }
-                try { migrateArenas(oldDb); } catch (Exception e) { log.warning("Arena migration error: " + e.getMessage()); }
-                try { migrateRecords(oldDb); } catch (Exception e) { log.warning("Record migration error: " + e.getMessage()); }
-                try { migrateLocations(oldDb); } catch (Exception e) { log.warning("Location migration error: " + e.getMessage()); }
-                try { migrateBlacklist(oldDb); } catch (Exception e) { log.warning("Blacklist migration error: " + e.getMessage()); }
-                try { migrateShopItems(oldDb); } catch (Exception e) { log.warning("Shop migration error: " + e.getMessage()); }
+                try { migratePlayers(oldDb); } catch (Exception e) { log.warning("Player migration error: " + e.getMessage()); e.printStackTrace(); }
+                try { migrateArenas(oldDb); } catch (Exception e) { log.warning("Arena migration error: " + e.getMessage()); e.printStackTrace(); }
+                try { migrateRecords(oldDb); } catch (Exception e) { log.warning("Record migration error: " + e.getMessage()); e.printStackTrace(); }
+                try { migrateLocations(oldDb); } catch (Exception e) { log.warning("Location migration error: " + e.getMessage()); e.printStackTrace(); }
+                try { migrateBlacklist(oldDb); } catch (Exception e) { log.warning("Blacklist migration error: " + e.getMessage()); e.printStackTrace(); }
+                try { migrateShopItems(oldDb); } catch (Exception e) { log.warning("Shop migration error: " + e.getMessage()); e.printStackTrace(); }
                 return null;
             });
 
@@ -83,106 +96,149 @@ public class MigrationService {
         }
     }
 
+    // ─── Players: dueltime_playerdata ───
+
     private void migratePlayers(SqlHelper oldDb) {
-        try {
-            oldDb.query("SELECT * FROM player_data", rs -> {
-                var p = new cn.valorin.dueltime4.player.PlayerProfile(rs.getString("player_name"));
-                try { p.setExp(rs.getDouble("exp")); } catch (Exception ignored) {}
-                try { p.setPoint(rs.getInt("point")); } catch (Exception ignored) {}
-                playerRepo.upsert(p);
-                playerCount++;
-                return null;
-            });
-        } catch (Exception e) {
-            log.warning("Could not read player_data table: " + e.getMessage());
-        }
+        oldDb.query("SELECT * FROM dueltime_playerdata", rs -> {
+            String name = rs.getString("id"); // DT3 uses 'id' for player name
+            PlayerProfile p = new PlayerProfile(name);
+            try { p.setExp(rs.getDouble("exp")); } catch (Exception ignored) {}
+            try { p.setPoint((int) rs.getDouble("point")); } catch (Exception ignored) {}
+            try { p.setTotalGames(rs.getInt("total_game_number")); } catch (Exception ignored) {}
+            try { p.setTotalTime(rs.getInt("total_game_time")); } catch (Exception ignored) {}
+            try { p.setClassicWins(rs.getInt("arena_classic_wins")); } catch (Exception ignored) {}
+            try { p.setClassicLoses(rs.getInt("arena_classic_loses")); } catch (Exception ignored) {}
+            try { p.setClassicDraws(rs.getInt("arena_classic_draws")); } catch (Exception ignored) {}
+            playerRepo.upsert(p);
+            playerCount++;
+            return null;
+        });
     }
+
+    // ─── Arenas: dueltime_arena_classic ───
 
     private void migrateArenas(SqlHelper oldDb) {
-        try {
-            oldDb.query("SELECT * FROM classic_arena_data", rs -> {
-                String id = rs.getString("id");
-                String name = rs.getString("name");
-                String world = "";
-                try { world = rs.getString("world"); } catch (Exception ignored) {}
-                String dataJson = String.format(
-                    "{\"pos1\":{\"x\":%f,\"y\":%f,\"z\":%f},\"pos2\":{\"x\":%f,\"y\":%f,\"z\":%f}}",
-                    rs.getDouble("p1_x"), rs.getDouble("p1_y"), rs.getDouble("p1_z"),
-                    rs.getDouble("p2_x"), rs.getDouble("p2_y"), rs.getDouble("p2_z"));
-                arenaRepo.save(id, name, "classic", world, dataJson);
-                arenaCount++;
-                return null;
-            });
-        } catch (Exception e) {
-            log.warning("Could not read classic_arena_data: " + e.getMessage());
-        }
+        oldDb.query("SELECT * FROM dueltime_arena_classic", rs -> {
+            String id = rs.getString("id");
+            String name = rs.getString("name");
+            Location p1 = parseDt3Location(rs.getString("player_location_1"));
+            Location p2 = parseDt3Location(rs.getString("player_location_2"));
+            String world = (p1 != null && p1.getWorld() != null) ? p1.getWorld().getName() : "world";
+
+            String dataJson = buildArenaJson(world, p1, p2);
+            arenaRepo.save(id, name, "classic", world, dataJson);
+            arenaCount++;
+            return null;
+        });
     }
+
+    private String buildArenaJson(String world, Location p1, Location p2) {
+        if (p1 == null) p1 = new Location(Bukkit.getWorlds().get(0), 0, 64, 0);
+        if (p2 == null) p2 = new Location(Bukkit.getWorlds().get(0), 0, 64, 0);
+        return String.format(
+            "{\"world\":\"%s\",\"pos1\":{\"x\":%f,\"y\":%f,\"z\":%f},\"pos2\":{\"x\":%f,\"y\":%f,\"z\":%f}}",
+            world, p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ());
+    }
+
+    // ─── Records: dueltime_arena_record_classic ───
 
     private void migrateRecords(SqlHelper oldDb) {
-        try {
-            oldDb.query("SELECT * FROM classic_arena_record_data", rs -> {
-                recordRepo.insert(
-                    rs.getString("player_name"), rs.getString("arena_id"), "classic",
-                    rs.getString("opponent_name"), rs.getString("result"),
-                    rs.getInt("time"), rs.getDouble("exp_change"),
-                    rs.getInt("hit_time"), rs.getDouble("total_damage"),
-                    rs.getDouble("max_damage"), rs.getDouble("average_damage"),
-                    rs.getString("time_str"));
-                recordCount++;
-                return null;
-            });
-        } catch (Exception e) {
-            log.warning("Could not read classic_arena_record_data: " + e.getMessage());
-        }
+        oldDb.query("SELECT * FROM dueltime_arena_record_classic", rs -> {
+            recordRepo.insert(
+                rs.getString("player_name"), rs.getString("arena_id"), "classic",
+                rs.getString("opponent_name"), rs.getString("result"),
+                rs.getInt("time"), rs.getDouble("exp_change"),
+                rs.getInt("hit_time"), rs.getDouble("total_damage"),
+                rs.getDouble("max_damage"), rs.getDouble("average_damage"),
+                rs.getString("date"));
+            recordCount++;
+            return null;
+        });
     }
+
+    // ─── Locations: dueltime_location ───
 
     private void migrateLocations(SqlHelper oldDb) {
-        try {
-            oldDb.query("SELECT * FROM location_data", rs -> {
-                var world = Bukkit.getWorld(rs.getString("world"));
-                if (world != null) {
-                    locationRepo.set(rs.getString("key"),
-                        new org.bukkit.Location(world, rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
-                            rs.getFloat("yaw"), rs.getFloat("pitch")));
-                }
-                return null;
-            });
-        } catch (Exception e) {
-            log.warning("Could not read location_data: " + e.getMessage());
-        }
+        oldDb.query("SELECT * FROM dueltime_location", rs -> {
+            String dt3Id = rs.getString("id"); // e.g. "dueltime:lobby"
+            String locStr = rs.getString("location");
+            Location loc = parseDt3Location(locStr);
+            if (loc == null) return null;
+
+            // Map DT3 keys to DT4 keys
+            String dt4Key = dt3Id;
+            if ("dueltime:lobby".equals(dt3Id)) dt4Key = "lobby";
+
+            locationRepo.set(dt4Key, loc);
+            return null;
+        });
     }
+
+    // ─── Blacklist: dueltime_blacklist ───
 
     private void migrateBlacklist(SqlHelper oldDb) {
-        try {
-            oldDb.query("SELECT * FROM blacklist", rs -> {
-                blacklistRepo.add(rs.getString("player_name"), "");
-                return null;
-            });
-        } catch (Exception e) {
-            log.warning("Could not read blacklist: " + e.getMessage());
+        oldDb.query("SELECT * FROM dueltime_blacklist", rs -> {
+            blacklistRepo.add(rs.getString("id"), "");
+            return null;
+        });
+    }
+
+    // ─── Shop: dueltime_shop ───
+
+    private void migrateShopItems(SqlHelper oldDb) {
+        var items = new ArrayList<LinkedHashMap<String, Object>>();
+        oldDb.query("SELECT * FROM dueltime_shop", rs -> {
+            var item = new LinkedHashMap<String, Object>();
+            String itemId = "migrated_" + shopItemCount;
+            try { itemId = String.valueOf(rs.getInt("id")); } catch (Exception ignored) {}
+
+            item.put("id", itemId);
+            item.put("material", "STONE");
+            try {
+                String desc = rs.getString("description");
+                item.put("name", desc != null ? desc : "Migrated Item " + itemId);
+            } catch (Exception ignored) {
+                item.put("name", "Migrated Item " + itemId);
+            }
+            try { item.put("cost", (int) rs.getDouble("point")); } catch (Exception ignored) {
+                item.put("cost", 1);
+            }
+            item.put("lore", List.of("&7Migrated from DuelTime3"));
+            try {
+                String cmds = rs.getString("commands");
+                item.put("commands", cmds != null ? List.of(cmds.split(";")) : List.of("say %player% bought " + itemId));
+            } catch (Exception ignored) {
+                item.put("commands", List.of("say %player% bought " + itemId));
+            }
+            items.add(item);
+            shopItemCount++;
+            return null;
+        });
+        if (!items.isEmpty()) {
+            config.set("shop.items", items);
         }
     }
 
-    private void migrateShopItems(SqlHelper oldDb) {
+    // ─── Location parsing ───
+
+    /** Parse DT3 location string: "DUELTIME LOCATION world,x,y,z,yaw,pitch" */
+    private Location parseDt3Location(String str) {
+        if (str == null) return null;
+        Matcher m = LOC_PATTERN.matcher(str);
+        if (!m.find()) return null;
         try {
-            var items = new java.util.ArrayList<java.util.LinkedHashMap<String, Object>>();
-            oldDb.query("SELECT * FROM shop_reward_data", rs -> {
-                var item = new java.util.LinkedHashMap<String, Object>();
-                item.put("id", rs.getString("id") != null ? rs.getString("id") : "migrated_" + shopItemCount);
-                item.put("material", "STONE");
-                item.put("name", rs.getString("name") != null ? rs.getString("name") : "Migrated Item");
-                item.put("cost", rs.getInt("cost"));
-                item.put("lore", java.util.List.of("&7Migrated from DuelTime3"));
-                item.put("commands", java.util.List.of("say %player% bought migrated item"));
-                items.add(item);
-                shopItemCount++;
-                return null;
-            });
-            if (!items.isEmpty()) {
-                config.set("shop.items", items);
-            }
+            String worldName = m.group(1);
+            double x = Double.parseDouble(m.group(2));
+            double y = Double.parseDouble(m.group(3));
+            double z = Double.parseDouble(m.group(4));
+            float yaw = Float.parseFloat(m.group(5));
+            float pitch = Float.parseFloat(m.group(6));
+            var world = Bukkit.getWorld(worldName);
+            if (world == null) world = Bukkit.getWorlds().get(0);
+            return new Location(world, x, y, z, yaw, pitch);
         } catch (Exception e) {
-            log.warning("Could not read shop_reward_data: " + e.getMessage());
+            log.warning("Failed to parse DT3 location: " + str);
+            return null;
         }
     }
 }

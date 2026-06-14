@@ -39,6 +39,11 @@ public class PlayerProfile {
     public int getMaxWinStreak() { return maxWinStreak; }
     public void setExp(double exp) { this.exp = exp; }
     public void setPoint(int point) { this.point = point; }
+    public void setTotalGames(int n) { this.totalGames = n; }
+    public void setTotalTime(int n) { this.totalTime = n; }
+    public void setClassicWins(int n) { this.classicWins = n; }
+    public void setClassicLoses(int n) { this.classicLoses = n; }
+    public void setClassicDraws(int n) { this.classicDraws = n; }
     public void addExp(double amount) { this.exp += amount; }
     public void addPoint(int amount) { this.point += amount; }
     public void incrementWins() { this.classicWins++; this.totalGames++; }
