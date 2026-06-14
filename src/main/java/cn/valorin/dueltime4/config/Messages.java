@@ -37,7 +37,7 @@ public class Messages {
     public String getRaw(String path) {
         return cache.computeIfAbsent(path, p -> {
             String val = yaml.getString(p);
-            return val != null ? val : path;
+            return val != null ? val : "%prefix%Missing message: " + p;
         });
     }
 
