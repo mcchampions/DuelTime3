@@ -9,6 +9,7 @@ import cn.valorin.dueltime4.repository.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 
@@ -71,6 +72,9 @@ public class MigrationService {
             }
             jdbcUrl = "jdbc:sqlite:" + f.getAbsolutePath();
         }
+
+        // Migrate config values from old config.yml
+        try { migrateConfigValues(); } catch (Exception e) { log.warning("Config migration error: " + e.getMessage()); }
 
         log.info("[DuelTime4] Connecting to old database: " + jdbcUrl);
         try (Connection oldConn = user != null ?
@@ -237,6 +241,75 @@ public class MigrationService {
     }
 
     // ─── Location parsing ───
+
+    // ─── Config migration ───
+
+    private void migrateConfigValues() {
+        String folder = config.getString("migration.old-plugin-folder", "plugins/DuelTime");
+        File oldConfigFile = new File(folder, "config.yml");
+        if (!oldConfigFile.isAbsolute()) {
+            oldConfigFile = new File(config.getPlugin().getDataFolder().getParentFile().getParentFile(), folder + "/config.yml");
+        }
+        if (!oldConfigFile.exists()) {
+            log.warning("Old config.yml not found at: " + oldConfigFile.getAbsolutePath());
+            return;
+        }
+        YamlConfiguration old = YamlConfiguration.loadConfiguration(oldConfigFile);
+
+        // Map DT3 → DT4 config paths
+        copyIfSet(old, "Message.prefix", "core.prefix");
+        copyIfSet(old, "Arena.classic.reward.win-exp", "arena.defaults.classic.reward.win-exp");
+        copyIfSet(old, "Arena.classic.reward.win-point", "arena.defaults.classic.reward.win-point");
+        copyIfSet(old, "Arena.classic.reward.lose-exp-rate", "arena.defaults.classic.reward.lose-exp-rate");
+        copyIfSet(old, "Arena.classic.auto-respawn.enabled", "arena.defaults.classic.auto-respawn");
+        copyIfSet(old, "Arena.classic.delayed-back.time", "arena.defaults.classic.delayed-back");
+
+        copyIfSet(old, "Ranking.auto-refresh-interval", "ranking.refresh-seconds");
+        copyIfSet(old, "Ranking.hologram.enabled", "ranking.hologram.enabled");
+        copyIfSet(old, "Ranking.hologram.size", "ranking.hologram.max-size");
+
+        copyIfSet(old, "Record.show.cooldown", "record.show-cooldown");
+        copyIfSet(old, "Record.print.cost", "record.print-cost");
+
+        // Migrate level tiers
+        if (old.contains("Level.tier.showed-in-chat-box.format")) {
+            config.set("level.chat-prefix", old.getString("Level.tier.showed-in-chat-box.format"));
+        }
+        if (old.contains("Level.tier.default")) {
+            String title = old.getString("Level.tier.default.title", "&7无段位");
+            int expNext = old.getInt("Level.tier.default.exp-for-level-up", 10);
+            config.set("level.tiers", List.of(
+                Map.of("level", 0, "title", title, "exp-to-next", expNext)
+            ));
+        }
+        // Migrate custom tiers
+        if (old.contains("Level.tier.custom")) {
+            var customSec = old.getConfigurationSection("Level.tier.custom");
+            if (customSec != null) {
+                var tiers = new ArrayList<Map<String, Object>>();
+                // Add default tier
+                String defTitle = old.getString("Level.tier.default.title", "&7无段位");
+                int defExp = old.getInt("Level.tier.default.exp-for-level-up", 10);
+                tiers.add(Map.of("level", 0, "title", (Object) defTitle, "exp-to-next", (Object) defExp));
+                // Add custom tiers
+                for (String key : customSec.getKeys(false)) {
+                    int lvl = old.getInt("Level.tier.custom." + key + ".level", 0);
+                    String ttl = old.getString("Level.tier.custom." + key + ".title", "&7?");
+                    int exp = old.getInt("Level.tier.custom." + key + ".exp-for-level-up", 10);
+                    tiers.add(Map.of("level", (Object) lvl, "title", (Object) ttl, "exp-to-next", (Object) exp));
+                }
+                config.set("level.tiers", tiers);
+            }
+        }
+
+        log.info("[DuelTime4] Config values migrated from DT3");
+    }
+
+    private void copyIfSet(YamlConfiguration old, String oldPath, String newPath) {
+        if (old.contains(oldPath)) {
+            config.set(newPath, old.get(oldPath));
+        }
+    }
 
     /** Parse DT3 location string: "DUELTIME LOCATION world,x,y,z,yaw,pitch" */
     private Location parseDt3Location(String str) {
