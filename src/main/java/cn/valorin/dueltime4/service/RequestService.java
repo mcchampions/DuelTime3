@@ -10,6 +10,10 @@ public class RequestService {
     private final Map<String, Map<String, Request>> pending = new ConcurrentHashMap<>();
 
     public void sendRequest(Player sender, Player target, String arenaId) {
+        if (sender.getName().equals(target.getName())) {
+            sender.sendMessage("§cYou cannot invite yourself!");
+            return;
+        }
         pending.computeIfAbsent(sender.getName(), k -> new ConcurrentHashMap<>())
             .put(target.getName(), new Request(arenaId, System.currentTimeMillis() + 60000));
         target.sendMessage("§e" + sender.getName() + " §7invites you to a duel! §a/dt accept §7or §c/dt decline");

@@ -2,6 +2,7 @@ package cn.valorin.dueltime4.command.impl;
 
 import cn.valorin.dueltime4.DuelTimePlugin;
 import cn.valorin.dueltime4.arena.Arena;
+import cn.valorin.dueltime4.arena.ArenaState;
 import cn.valorin.dueltime4.command.SubCommand;
 import cn.valorin.dueltime4.service.ArenaService;
 import cn.valorin.dueltime4.service.BlacklistService;
@@ -30,6 +31,18 @@ public class CmdJoin extends SubCommand {
         Arena arena = arenaService.get(args[0]);
         if (arena == null) {
             player.sendMessage("Arena not found: " + args[0]);
+            return;
+        }
+        if (arena.getState() != ArenaState.WAITING) {
+            player.sendMessage("This arena is not accepting players right now.");
+            return;
+        }
+        if (arenaService.getByPlayer(player) != null) {
+            player.sendMessage("You are already in an arena. Use /dt quit first.");
+            return;
+        }
+        if (arenaService.getWaiting(player) != null) {
+            player.sendMessage("You are already waiting for an arena. Use /dt quit first.");
             return;
         }
         arenaService.addToWaiting(player, args[0]);

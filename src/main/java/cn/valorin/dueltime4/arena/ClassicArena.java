@@ -52,6 +52,7 @@ public class ClassicArena extends Arena {
 
     @Override
     protected void onStart() {
+        if (gamers.size() < 2) return;
         gamers.get(0).getPlayer().teleport(pos1);
         gamers.get(0).updateRecentLocation(pos1);
         gamers.get(1).getPlayer().teleport(pos2);

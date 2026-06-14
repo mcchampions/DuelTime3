@@ -135,6 +135,7 @@ public class MatchService {
             arenaService.removeGamerMapping(g.getPlayerName());
             Player player = g.getPlayer();
             PlayerProfile profile = playerService.getOrCreate(g.getPlayerName());
+            double expChange = 0;
 
             if ("CLEAR".equals(reason)) {
                 Object winnerObj = result.get("winner");
@@ -145,15 +146,17 @@ public class MatchService {
                     int streakBonus = playerService.getWinStreakBonus(arenaType, profile.getWinStreak() + 1);
                     double expRate = playerService.getWinStreakExpRate(arenaType, profile.getWinStreak() + 1);
 
+                    expChange = baseExp * (1 + expRate);
                     profile.onWin();
                     profile.addPoint(basePoint + streakBonus);
-                    profile.addExp(baseExp * (1 + expRate));
+                    profile.addExp(expChange);
                     profile.incrementWins();
                     g.setResult("WIN");
                 } else {
-                    profile.onLose();
                     double expLoss = config.getArenaWinExp(arenaType) * config.getArenaLoseExpRate(arenaType);
-                    profile.addExp(-expLoss);
+                    expChange = -expLoss;
+                    profile.onLose();
+                    profile.addExp(expChange);
                     profile.incrementLoses();
                     g.setResult("LOSE");
                 }
@@ -171,7 +174,7 @@ public class MatchService {
                 opponent = ca.getOpponentName(g.getPlayerName());
             }
             recordRepo.insert(g.getPlayerName(), arenaId, arenaType, opponent,
-                g.getResult(), duration, 0, g.getHitCount(),
+                g.getResult(), duration, expChange, g.getHitCount(),
                 g.getTotalDamage(), g.getMaxDamage(),
                 g.getHitCount() > 0 ? g.getTotalDamage() / g.getHitCount() : 0,
                 time);
